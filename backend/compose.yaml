@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # PostgreSQL База данных
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hackathon
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./hackaton-service/migration:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    networks:
+      - hackathon
+
+  # Go сервис (Auth, Chat, User management)
+  go_service:
+    build:
+      context: ./hackaton-service
+      dockerfile: Dockerfile.api
+    container_name: go_service
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://user:password@postgres:5432/hackathon
+      - JWT_SECRET=super_secret_key_for_hackathon_2026
+      - API_ADDRESS=:8080
+      - LOG_LEVEL=DEBUG
+      - ADMIN_USER=admin
+      - ADMIN_PASSWORD=password
+      - TOKEN_TTL=2h
+      - SEARCH_CONCURRENCY=10
+      - SEARCH_RATE=100
+    volumes:
+      - ./hackaton-service/api/config.yaml:/config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+    networks:
+      - hackathon
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/ping"]
+      interval: 10s
+      retries: 3
+      timeout: 5s
+      start_period: 10s
+
+  # Nginx Gateway
+  gateway:
+    image: nginx:alpine
+    container_name: nginx_gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - go_service
+    networks:
+      - hackathon
+
+  # PgAdmin для управления БД
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4
+    restart: unless-stopped
+    ports:
+      - "18888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@test.com
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_DISABLE_POSTFIX: "true"
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - hackathon
+
+volumes:
+  postgres:
+  pgadmin:
+
+networks:
+  hackathon:
+    driver: bridge
