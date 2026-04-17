@@ -1,0 +1,7 @@
+log_level: DEBUG
+search_concurrency: 10
+search_rate: 100
+token_ttl: 2h
+api_server:
+  address: :8080 
+  timeout: 15s
