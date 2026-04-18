@@ -6,9 +6,11 @@ export function Footer(){
     return(
         <div className="bg-[#A0CAF0CC] h-[260px] flex items-center">
             <div className="ml-[150px]">
-                <svg width="191" height="161">
-                    <image href="logo.png" width="191" height="161"/>
-                </svg>
+                <Link href="/">
+                    <svg width="191" height="161">
+                        <image href="logo.png" width="191" height="161"/>
+                    </svg>
+                </Link>
             </div>
 
             <div className="ml-[40px] flex flex-col gap-y-2">

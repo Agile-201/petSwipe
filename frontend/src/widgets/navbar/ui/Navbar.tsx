@@ -6,9 +6,11 @@ export function Navbar(){
     return(
         <div className="bg-white h-[94px] flex items-center">
             <div className="ml-[150px]">
-                <svg width="83" height="70">
-                    <image href="logo.png" width="83" height="70"/>
-                </svg>
+                <Link href="/">
+                    <svg width="83" height="70">
+                        <image href="logo.png" width="83" height="70"/>
+                    </svg>
+                </Link>
             </div>
             <div className="flex gap-[70px] ml-[40px]">
                 <Link href="/pets"><div className="text-[22px] font-light">Питомцы</div></Link>

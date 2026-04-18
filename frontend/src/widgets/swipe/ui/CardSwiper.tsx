@@ -11,7 +11,7 @@ const cardData = [
     age: 4,
     breed: 'Мейн-кун',
     bio: "добрый великан среди кошек с царственной внешностью и мягким, собачьим по преданности характером.",
-    image: "https://lh6.googleusercontent.com/proxy/78d8tcE2bEZSulevM8xnKPoxjp-i1hG93HRbVf2X23ILge1lCuuQA1YHD0lt3ZLsfZQcHKAqZ6FVYyYhn9RDmPFw8FtCMAonTOKJPAY",
+    image: "img1.png",
   },
   {
     id: 2,
@@ -19,7 +19,7 @@ const cardData = [
     age: 8,
     breed: 'нет информации',
     bio: "добрый великан среди кошек с царственной внешностью и мягким, собачьим по преданности характером.",
-    image: "https://lh6.googleusercontent.com/proxy/78d8tcE2bEZSulevM8xnKPoxjp-i1hG93HRbVf2X23ILge1lCuuQA1YHD0lt3ZLsfZQcHKAqZ6FVYyYhn9RDmPFw8FtCMAonTOKJPAY",
+    image: "img2.png",
   },
   {
     id: 3,
@@ -27,9 +27,16 @@ const cardData = [
     age: 4,
     breed: 'Мейн-кун',
     bio: "добрый великан среди кошек с царственной внешностью и мягким, собачьим по преданности характером.",
-    image: "https://lh6.googleusercontent.com/proxy/78d8tcE2bEZSulevM8xnKPoxjp-i1hG93HRbVf2X23ILge1lCuuQA1YHD0lt3ZLsfZQcHKAqZ6FVYyYhn9RDmPFw8FtCMAonTOKJPAY",
+    image: "img1.png",
   },
-
+  {
+    id: 4,
+    name: "Барсик",
+    age: 8,
+    breed: 'нет информации',
+    bio: "добрый великан среди кошек с царственной внешностью и мягким, собачьим по преданности характером.",
+    image: "img2.png",
+  },
 ];
 
 
@@ -43,8 +50,10 @@ export const CardSwiper = () => {
 
   if (cards.length === 0) {
     return (
-      <div className="flex h-[600px] w-[700px] items-center justify-center">
-        <p className="text-gray-500">Нет больше анкет</p>
+      <div className="flex items-center justify-center">
+        <div className="flex h-[600px] w-[700px] items-center justify-center">
+          <p className="text-gray-500">Анкеты закончились!</p>
+        </div>
       </div>
     );
   }

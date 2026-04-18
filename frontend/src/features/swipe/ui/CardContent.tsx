@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, PanInfo, useMotionValue, useTransform, animate } from "framer-motion";
 import { useSwipeable } from "react-swipeable";
 import { X, Heart } from "lucide-react";
+import { Button } from "@/shared/ui/button";
 
 interface Profile {
   id: number;
@@ -116,22 +117,27 @@ export const CardContent = ({ profile, onLike, onDislike }: CardContentProps) =>
         </div>
 
         <div className="flex flex-col justify-between p-4 md:w-1/2 bg-[#759ACF40]">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-              {profile.name}, {profile.age}
+          <div className="ml-4 mt-2">
+            <h2 className="text-[40px] font-bold text-[#0F1B65] dark:text-white">
+              {profile.name}
             </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {profile.breed}
+            <p className="flex text-[20px] text-[#0F1B65] items-center font-bold mt-4">
+              Возраст: <p className="ml-4 mt-1 text-[17px] text-[#0F1B65] font-light">{profile.age} { profile.age < 5 ? "года" : "лет"}</p>
             </p>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300">
-              О себе
+            <p className="flex text-[20px] text-[#0F1B65] items-center font-bold mt-3">
+              Порода: <p className="ml-4 mt-1 text-[17px] text-[#0F1B65] font-light">{profile.breed}</p>
+            </p>
+            <h3 className="flex text-[20px] text-[#0F1B65] items-center font-bold mt-3">
+              Описание:
             </h3>
-            <p className="mt-1 text-gray-600 dark:text-gray-400">
+            <p className="text-[17px] text-[#0F1B65] font-light mt-1">
               {profile.bio}
             </p>
+            <p className="flex text-[20px] text-[#0F1B65] items-center font-light mt-4 underline">
+            Подробнее
+            </p>
           </div>
+          <Button className="bg-[#387CCD] h-[44px] rounded-[20px] w-[242px] font-normal mb-2 self-center">Связаться с владельцем</Button>
         </div>
       </div>
     </div>
