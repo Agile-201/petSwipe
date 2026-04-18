@@ -12,7 +12,7 @@ export function Footer(){
             </div>
 
             <div className="ml-[40px] flex flex-col gap-y-2">
-                <Link href="/pets"><div className="text-[16px] font-light">Животные</div></Link>
+                <Link href="/pets"><div className="text-[16px] font-light">Питомцы</div></Link>
                 <Link href="/owners"><div className="text-[16px] font-light">Владельцы</div></Link>
                 <Link href="/about"><div className="text-[16px] font-light">О нас</div></Link>
                 <Link href="/about"><div className="text-[16px] font-light">Политика конфиденциальности</div></Link>

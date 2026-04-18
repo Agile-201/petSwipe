@@ -11,7 +11,7 @@ export function Navbar(){
                 </svg>
             </div>
             <div className="flex gap-[70px] ml-[40px]">
-                <Link href="/pets"><div className="text-[22px] font-light">Животные</div></Link>
+                <Link href="/pets"><div className="text-[22px] font-light">Питомцы</div></Link>
                 <Link href="/owners"><div className="text-[22px] font-light">Владельцы</div></Link>
                 <Link href="/about"><div className="text-[22px] font-light">О нас</div></Link>
             </div>

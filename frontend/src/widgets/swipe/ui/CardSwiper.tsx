@@ -1,56 +1,64 @@
-"use client"
+"use client";
 
-import * as React from "react"
-
-import { Card, CardContent } from "@/shared/ui/card"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/shared/ui/carousel"
+import { useState } from "react";
+import { CardContent, TinderCard } from "@/features/swipe";
 
 
-export default function CardSwiper() {
-  const [api, setApi] = React.useState<CarouselApi>()
-  const [current, setCurrent] = React.useState(0)
-  const [count, setCount] = React.useState(0)
+const cardData = [
+  {
+    id: 1,
+    name: "Василий",
+    age: 4,
+    breed: 'Мейн-кун',
+    bio: "добрый великан среди кошек с царственной внешностью и мягким, собачьим по преданности характером.",
+    image: "https://lh6.googleusercontent.com/proxy/78d8tcE2bEZSulevM8xnKPoxjp-i1hG93HRbVf2X23ILge1lCuuQA1YHD0lt3ZLsfZQcHKAqZ6FVYyYhn9RDmPFw8FtCMAonTOKJPAY",
+  },
+  {
+    id: 2,
+    name: "Барсик",
+    age: 8,
+    breed: 'нет информации',
+    bio: "добрый великан среди кошек с царственной внешностью и мягким, собачьим по преданности характером.",
+    image: "https://lh6.googleusercontent.com/proxy/78d8tcE2bEZSulevM8xnKPoxjp-i1hG93HRbVf2X23ILge1lCuuQA1YHD0lt3ZLsfZQcHKAqZ6FVYyYhn9RDmPFw8FtCMAonTOKJPAY",
+  },
+  {
+    id: 3,
+    name: "Василий",
+    age: 4,
+    breed: 'Мейн-кун',
+    bio: "добрый великан среди кошек с царственной внешностью и мягким, собачьим по преданности характером.",
+    image: "https://lh6.googleusercontent.com/proxy/78d8tcE2bEZSulevM8xnKPoxjp-i1hG93HRbVf2X23ILge1lCuuQA1YHD0lt3ZLsfZQcHKAqZ6FVYyYhn9RDmPFw8FtCMAonTOKJPAY",
+  },
 
-  React.useEffect(() => {
-    if (!api) {
-      return
-    }
+];
 
-    setCount(api.scrollSnapList().length)
-    setCurrent(api.selectedScrollSnap() + 1)
 
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap() + 1)
-    })
-  }, [api])
+export const CardSwiper = () => {
+  const [cards, setCards] = useState(cardData);
+
+  const handleSwipe = (direction: "left" | "right", card: (typeof cardData)[0]) => {
+    console.log(`Swipe ${direction} on ${card.name}`);
+    setCards((prev) => prev.slice(1));
+  };
+
+  if (cards.length === 0) {
+    return (
+      <div className="flex h-[600px] w-[700px] items-center justify-center">
+        <p className="text-gray-500">Нет больше анкет</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-[10rem] sm:max-w-xs">
-      <Carousel setApi={setApi} className="w-full max-w-xs">
-        <CarouselContent>
-          {Array.from({ length: 5 }).map((_, index) => (
-            <CarouselItem key={index}>
-              <Card className="m-px">
-                <CardContent className="flex aspect-square items-center justify-center p-6">
-                  <span className="text-4xl font-semibold">{index + 1}</span>
-                </CardContent>
-              </Card>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
-      <div className="py-2 text-center text-sm text-muted-foreground">
-        Slide {current} of {count}
-      </div>
+    <div className="relative mx-auto h-[600px] w-[700px] mb-20">
+      {cards.map((card, index) => (
+        <TinderCard
+          key={card.id}
+          profile={card}
+          onSwipe={(dir) => handleSwipe(dir, card)}
+          isActive={index === 0}
+        />
+      ))}
     </div>
-  )
-}
+  );
+};
