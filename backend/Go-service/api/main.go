@@ -39,12 +39,20 @@ func main() {
 	}
 	defer dbConn.Close()
 
-	authenticator, err := aaa.New(cfg.JWTSecret, 2*time.Hour, log, dbConn)
+	authenticator, err := aaa.New(cfg.JWTSecret, cfg.TokenTTL, log, dbConn)
 	if err != nil {
 		log.Error("failed to create authenticator", "error", err)
 		return
 	}
 	userRepo := db.NewUserRepository(dbConn)
+	chatRepo := db.NewChatRepository(dbConn)
+
+	authMiddleware := middleware.Auth(authenticator)
+	profileHandler := authMiddleware(rest.NewProfileHandler(log, userRepo))
+	updateProfileHandler := authMiddleware(rest.NewUpdateProfileHandler(log, userRepo))
+	chatHandler := authMiddleware(rest.NewChatHandler(log, chatRepo))
+	sendMessageHandler := authMiddleware(rest.NewSendMessageHandler(log, chatRepo))
+
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /health", rest.NewHealthcheck())
@@ -54,15 +62,17 @@ func main() {
 	mux.Handle("POST /api/auth/login", rest.NewLoginHandler(log, authenticator))
 	mux.Handle("POST /api/auth/register", rest.NewRegisterHandler(log, authenticator))
 
-	authMiddleware := middleware.Auth(authenticator)
-	profileHandler := authMiddleware(rest.NewProfileHandler(log, userRepo))
 	mux.Handle("GET /api/auth/profile", profileHandler)
+	mux.Handle("PUT /api/auth/profile", updateProfileHandler)
+	mux.Handle("GET /api/chat/messages", chatHandler)
+	mux.Handle("POST /api/chat/send", sendMessageHandler)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
 	handler := middleware.WithMetrics(mux)
 	handler = middleware.CORS(handler)
+
 	server := http.Server{
 		Addr:        cfg.HTTPConfig.Address,
 		ReadTimeout: cfg.HTTPConfig.Timeout,
@@ -88,10 +98,6 @@ func main() {
 }
 
 func initDatabase(log *slog.Logger, dbURL string) (*sql.DB, error) {
-	if dbURL == "" {
-		dbURL = "postgres://user:password@100.121.171.79:5432/hackathon?sslmode=disable"
-	}
-
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		return nil, err
