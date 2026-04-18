@@ -1,9 +1,9 @@
 package rest
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
+	"hackaton/api/adapters/rest/middleware"
 	"hackaton/api/core"
 	"log/slog"
 	"net/http"
@@ -43,6 +43,9 @@ type ProfileResponse struct {
 	ID        int64  `json:"id"`
 	Email     string `json:"email"`
 	Role      string `json:"role"`
+	Nickname  *string `json:"nickname,omitempty"`
+	Bio       *string `json:"bio,omitempty"`
+	AvatarURL *string `json:"avatar_url,omitempty"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
@@ -51,7 +54,7 @@ func NewHealthcheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
+		w.Write([]byte(`{"status":"ok"}`))
 	}
 }
 
@@ -138,9 +141,7 @@ func NewRegisterHandler(log *slog.Logger, auth core.Authenticator) http.HandlerF
 			return
 		}
 
-		if req.Role == "" {
-			req.Role = "user"
-		}
+		if req.Role != "user" && req.Role != "admin" { req.Role = "user" }
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 		if err != nil {
 			log.ErrorContext(r.Context(), "failed to hash password", "error", err)
@@ -176,7 +177,7 @@ func NewProfileHandler(log *slog.Logger, userRepo core.UserRepository) http.Hand
 			return
 		}
 
-		userID, ok := userIDFromContext(r.Context())
+		userID, ok := middleware.UserIDFromContext(r.Context())
 		if !ok {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
@@ -193,6 +194,9 @@ func NewProfileHandler(log *slog.Logger, userRepo core.UserRepository) http.Hand
 			ID:        user.ID,
 			Email:     user.Email,
 			Role:      user.Role,
+			Nickname:  user.Nickname,
+			Bio:       user.Bio,
+			AvatarURL: user.AvatarURL,
 			CreatedAt: user.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			UpdatedAt: user.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 		}
@@ -205,10 +209,217 @@ func NewProfileHandler(log *slog.Logger, userRepo core.UserRepository) http.Hand
 	}
 }
 
-type contextKey string
-const userIDKey contextKey = "userID"
+func NewChatHandler(log *slog.Logger, chatRepo core.ChatRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
-func userIDFromContext(ctx context.Context) (int64, bool) {
-	id, ok := ctx.Value(userIDKey).(int64)
-	return id, ok
+		userID, ok := middleware.UserIDFromContext(r.Context())
+		if !ok {
+			log.WarnContext(r.Context(), "unauthorized chat access", "path", r.URL.Path)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		receiverIDStr := r.URL.Query().Get("receiver_id")
+		limitStr := r.URL.Query().Get("limit")
+
+		if receiverIDStr == "" {
+			log.WarnContext(r.Context(), "missing receiver_id", "user_id", userID)
+			http.Error(w, "receiver_id is required", http.StatusBadRequest)
+			return
+		}
+
+		receiverID, err := parseint64(receiverIDStr)
+		if err != nil {
+			log.WarnContext(r.Context(), "invalid receiver_id", "receiver_id", receiverIDStr, "error", err)
+			http.Error(w, "invalid receiver_id", http.StatusBadRequest)
+			return
+		}
+
+		if userID == receiverID {
+			log.WarnContext(r.Context(), "cannot chat with self", "user_id", userID)
+			http.Error(w, "cannot chat with yourself", http.StatusBadRequest)
+			return
+		}
+
+		limit := 50
+		if limitStr != "" {
+			if l, err := parseint(limitStr); err == nil && l > 0 && l <= 100 {
+				limit = l
+			}
+		}
+
+		messages, err := chatRepo.GetMessages(r.Context(), userID, receiverID, limit)
+		if err != nil {
+			log.ErrorContext(r.Context(), "failed to get messages", "user_id", userID, "receiver_id", receiverID, "error", err)
+			http.Error(w, "failed to get messages", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
+			"messages":    messages,
+			"count":       len(messages),
+			"user_id":     userID,
+			"receiver_id": receiverID,
+		}); err != nil {
+			log.ErrorContext(r.Context(), "failed to encode response", "error", err)
+		}
+
+		log.InfoContext(r.Context(), "messages retrieved", "user_id", userID, "receiver_id", receiverID, "count", len(messages))
+	}
+}
+
+func NewSendMessageHandler(log *slog.Logger, chatRepo core.ChatRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		userID, ok := middleware.UserIDFromContext(r.Context())
+		if !ok {
+			log.WarnContext(r.Context(), "unauthorized send message", "path", r.URL.Path)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		var req struct {
+			ReceiverID int64  `json:"receiver_id"`
+			Message    string `json:"message"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			log.WarnContext(r.Context(), "invalid request body", "error", err, "user_id", userID)
+			http.Error(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		if req.ReceiverID == 0 {
+			log.WarnContext(r.Context(), "missing receiver_id", "user_id", userID)
+			http.Error(w, "receiver_id is required", http.StatusBadRequest)
+			return
+		}
+
+		if req.Message == "" {
+			log.WarnContext(r.Context(), "empty message", "user_id", userID, "receiver_id", req.ReceiverID)
+			http.Error(w, "message cannot be empty", http.StatusBadRequest)
+			return
+		}
+
+		if len(req.Message) > 10000 {
+			log.WarnContext(r.Context(), "message too long", "user_id", userID, "length", len(req.Message))
+			http.Error(w, "message too long (max 10000 chars)", http.StatusBadRequest)
+			return
+		}
+
+		if userID == req.ReceiverID {
+			log.WarnContext(r.Context(), "cannot send message to self", "user_id", userID)
+			http.Error(w, "cannot send message to yourself", http.StatusBadRequest)
+			return
+		}
+
+		message, err := chatRepo.SendMessage(r.Context(), userID, req.ReceiverID, req.Message)
+		if err != nil {
+			log.ErrorContext(r.Context(), "failed to send message", "user_id", userID, "receiver_id", req.ReceiverID, "error", err)
+			http.Error(w, "failed to send message", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+
+		if err := json.NewEncoder(w).Encode(message); err != nil {
+			log.ErrorContext(r.Context(), "failed to encode response", "error", err)
+		}
+
+		log.InfoContext(r.Context(), "message sent", "user_id", userID, "receiver_id", req.ReceiverID, "message_length", len(req.Message))
+	}
+}
+
+func NewUpdateProfileHandler(log *slog.Logger, userRepo core.UserRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		userID, ok := middleware.UserIDFromContext(r.Context())
+		if !ok {
+			log.WarnContext(r.Context(), "unauthorized profile update", "path", r.URL.Path)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		var req struct {
+			Nickname  string `json:"nickname,omitempty"`
+			Bio       string `json:"bio,omitempty"`
+			AvatarURL string `json:"avatar_url,omitempty"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			log.WarnContext(r.Context(), "invalid request body", "error", err, "user_id", userID)
+			http.Error(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		if len(req.Nickname) > 100 {
+			log.WarnContext(r.Context(), "nickname too long", "user_id", userID, "length", len(req.Nickname))
+			http.Error(w, "nickname too long (max 100)", http.StatusBadRequest)
+			return
+		}
+		if len(req.Bio) > 5000 {
+			log.WarnContext(r.Context(), "bio too long", "user_id", userID, "length", len(req.Bio))
+			http.Error(w, "bio too long (max 5000)", http.StatusBadRequest)
+			return
+		}
+		if len(req.AvatarURL) > 500 {
+			log.WarnContext(r.Context(), "avatar_url too long", "user_id", userID, "length", len(req.AvatarURL))
+			http.Error(w, "avatar_url too long (max 500)", http.StatusBadRequest)
+			return
+		}
+
+		user, err := userRepo.Update(r.Context(), userID, &req.Nickname, &req.Bio, &req.AvatarURL)
+		if err != nil {
+			log.ErrorContext(r.Context(), "failed to update profile", "user_id", userID, "error", err)
+			http.Error(w, "failed to update profile", http.StatusInternalServerError)
+			return
+		}
+
+		resp := ProfileResponse{
+			ID:        user.ID,
+			Email:     user.Email,
+			Role:      user.Role,
+			Nickname:  user.Nickname,
+			Bio:       user.Bio,
+			AvatarURL: user.AvatarURL,
+			CreatedAt: user.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt: user.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.ErrorContext(r.Context(), "failed to encode response", "error", err)
+		}
+
+		log.InfoContext(r.Context(), "profile updated", "user_id", userID, "nickname", req.Nickname, "bio_len", len(req.Bio))
+	}
+}
+
+func parseint(s string) (int, error) {
+	var i int
+	_, err := fmt.Sscanf(s, "%d", &i)
+	return i, err
+}
+
+func parseint64(s string) (int64, error) {
+	var i int64
+	_, err := fmt.Sscanf(s, "%d", &i)
+	return i, err
 }
