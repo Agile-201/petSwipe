@@ -1,10 +1,10 @@
 version: '3.8'
 
 services:
-  # PostgreSQL База данных
+  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: postgres
+    container_name: postgres_hackathon
     restart: unless-stopped
     environment:
       POSTGRES_USER: user
@@ -13,8 +13,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres:/var/lib/postgresql/data
-      - ./hackaton-service/migration:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+      - ./Go-service/api/migration:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "user"]
       interval: 10s
@@ -22,43 +22,37 @@ services:
       start_period: 30s
       timeout: 10s
     networks:
-      - hackathon
+      - petswipe
 
-  # Go сервис (Auth, Chat, User management)
+  # Go Service (Auth, Chat, User management)
   go_service:
     build:
-      context: ./hackaton-service
+      context: ./Go-service
       dockerfile: Dockerfile.api
     container_name: go_service
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgres://user:password@postgres:5432/hackathon
-      - JWT_SECRET=super_secret_key_for_hackathon_2026
-      - API_ADDRESS=:8080
-      - LOG_LEVEL=DEBUG
-      - ADMIN_USER=admin
-      - ADMIN_PASSWORD=password
-      - TOKEN_TTL=2h
-      - SEARCH_CONCURRENCY=10
-      - SEARCH_RATE=100
-    volumes:
-      - ./hackaton-service/api/config.yaml:/config.yaml
+      DATABASE_URL: postgres://user:password@100.121.171.79:5432/hackathon?sslmode=disable
+      JWT_SECRET: super_secret_key
+      API_ADDRESS: :8080
+      LOG_LEVEL: DEBUG
+      TOKEN_TTL: 2h
+    ports:
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "8080"
     networks:
-      - hackathon
+      - petswipe
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/ping"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s
       retries: 3
       timeout: 5s
       start_period: 10s
 
   # Nginx Gateway
-  gateway:
+  nginx:
     image: nginx:alpine
     container_name: nginx_gateway
     restart: unless-stopped
@@ -69,30 +63,28 @@ services:
     depends_on:
       - go_service
     networks:
-      - hackathon
+      - petswipe
 
-  # PgAdmin для управления БД
+  # PgAdmin for database management
   pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin4
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
     restart: unless-stopped
     ports:
-      - "18888:80"
+      - "5050:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@test.com
-      PGADMIN_DEFAULT_PASSWORD: password
-      PGADMIN_DISABLE_POSTFIX: "true"
-    volumes:
-      - pgadmin:/var/lib/pgadmin
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_PROXY_X_FOR_COUNT: 1
+      PGADMIN_CONFIG_PROXY_X_PROTO_COUNT: 1
     depends_on:
       - postgres
     networks:
-      - hackathon
+      - petswipe
 
 volumes:
-  postgres:
-  pgadmin:
+  postgres_data:
 
 networks:
-  hackathon:
+  petswipe:
     driver: bridge

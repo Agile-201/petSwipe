@@ -1,7 +1,7 @@
 log_level: DEBUG
-search_concurrency: 10
-search_rate: 100
 token_ttl: 2h
+jwt_secret: super_secret_key_2
+database_url: postgres://user:password@100.121.171.79:5432/hackathon?sslmode=disable
 api_server:
   address: :8080 
   timeout: 15s

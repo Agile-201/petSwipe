@@ -1,5 +1,125 @@
 package main
 
-func main(){
-	
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"flag"
+	"hackaton/api/adapters/aaa"
+	"hackaton/api/adapters/db"
+	"hackaton/api/adapters/rest"
+	"hackaton/api/adapters/rest/middleware"
+	"hackaton/api/config"
+	"log/slog"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
+	_ "github.com/lib/pq"
+)
+
+func main() {
+	var configPath string
+	flag.StringVar(&configPath, "config", "config.yaml", "server configuration file")
+	flag.Parse()
+
+	cfg := config.MustLoad(configPath)
+
+	log := mustMakeLogger(cfg.LogLevel)
+
+	log.Info("starting server")
+	log.Debug("debug messages are enabled")
+
+	dbConn, err := initDatabase(log, cfg.DatabaseURL)
+	if err != nil {
+		log.Error("failed to initialize database", "error", err)
+		return
+	}
+	defer dbConn.Close()
+
+	authenticator, err := aaa.New(cfg.JWTSecret, 2*time.Hour, log, dbConn)
+	if err != nil {
+		log.Error("failed to create authenticator", "error", err)
+		return
+	}
+	userRepo := db.NewUserRepository(dbConn)
+	mux := http.NewServeMux()
+
+	mux.Handle("GET /health", rest.NewHealthcheck())
+	mux.Handle("GET /metrics", rest.NewMetricsHandler())
+	mux.Handle("GET /api/ping", rest.NewPingHandler(log, make(map[string]interface{})))
+
+	mux.Handle("POST /api/auth/login", rest.NewLoginHandler(log, authenticator))
+	mux.Handle("POST /api/auth/register", rest.NewRegisterHandler(log, authenticator))
+
+	authMiddleware := middleware.Auth(authenticator)
+	profileHandler := authMiddleware(rest.NewProfileHandler(log, userRepo))
+	mux.Handle("GET /api/auth/profile", profileHandler)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	handler := middleware.WithMetrics(mux)
+	handler = middleware.CORS(handler)
+	server := http.Server{
+		Addr:        cfg.HTTPConfig.Address,
+		ReadTimeout: cfg.HTTPConfig.Timeout,
+		Handler:     handler,
+		BaseContext: func(_ net.Listener) context.Context { return ctx },
+	}
+
+	go func() {
+		<-ctx.Done()
+		log.Debug("shutting down server")
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.Error("erroneous shutdown", "error", err)
+		}
+	}()
+
+	log.Info("Running HTTP server", "address", cfg.HTTPConfig.Address)
+	if err := server.ListenAndServe(); err != nil {
+		if !errors.Is(err, http.ErrServerClosed) {
+			log.Error("server closed unexpectedly", "error", err)
+			return
+		}
+	}
+}
+
+func initDatabase(log *slog.Logger, dbURL string) (*sql.DB, error) {
+	if dbURL == "" {
+		dbURL = "postgres://user:password@100.121.171.79:5432/hackathon?sslmode=disable"
+	}
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
+		return nil, err
+	}
+
+	log.Info("database connected")
+	return db, nil
+}
+
+func mustMakeLogger(logLevel string) *slog.Logger {
+	var level slog.Level
+	switch logLevel {
+	case "DEBUG":
+		level = slog.LevelDebug
+	case "INFO":
+		level = slog.LevelInfo
+	case "ERROR":
+		level = slog.LevelError
+	default:
+		panic("unknown log level: " + logLevel)
+	}
+	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level, AddSource: true})
+	return slog.New(handler)
 }
