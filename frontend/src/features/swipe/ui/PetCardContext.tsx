@@ -5,14 +5,14 @@ import { Button } from "@/shared/ui/button";
 import PetProfile from "@/entities/swipe/PetProfile"
 
 
-interface CardContentProps {
+interface PetCardContextProps {
   profile: PetProfile;
   onLike?: () => void;
   onDislike?: () => void;
 }
 
 
-export const CardContent = ({ profile, onLike, onDislike }: CardContentProps) => {
+export const PetCardContext = ({ profile, onLike, onDislike }: PetCardContextProps) => {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border bg-white shadow-lg transition-all duration-300 hover:shadow-xl dark:bg-gray-800 dark:border-gray-700">
       <div className="flex flex-1 flex-col md:flex-row">
@@ -28,7 +28,7 @@ export const CardContent = ({ profile, onLike, onDislike }: CardContentProps) =>
 
             <button
               onClick={onDislike}
-              className="rounded-full bg-white p-3 text-black backdrop-blur-sm transition-all hover:bg-red-500 hover:scale-110"
+              className="rounded-full bg-white p-3 text-black backdrop-blur-sm transition-all hover:bg-[#387CCD] hover:scale-110"
               aria-label="Dislike"
             >
               <X size={36} />
@@ -36,7 +36,7 @@ export const CardContent = ({ profile, onLike, onDislike }: CardContentProps) =>
 
             <button
               onClick={onLike}
-              className="rounded-full bg-white p-3 text-black backdrop-blur-sm transition-all hover:bg-green-500 hover:scale-110"
+              className="rounded-full bg-white p-3 text-black backdrop-blur-sm transition-all hover:bg-[#A0CAF0] hover:scale-110"
               aria-label="Like"
             >
               <Heart size={36} />

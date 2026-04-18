@@ -3,18 +3,18 @@
 import { useState } from "react";
 import { motion, PanInfo, useMotionValue, useTransform, animate } from "framer-motion";
 import { useSwipeable } from "react-swipeable";
-import { CardContent } from './CardContent'
+import { PetCardContext } from './PetCardContext'
 import PetProfile from "@/entities/swipe/PetProfile"
 
 
-interface TinderCardProps {
+interface PetCardProps {
   profile: PetProfile;
   onSwipe: (direction: "left" | "right") => void;
   isActive: boolean;
 }
 
 
-export const TinderCard = ({ profile, onSwipe, isActive }: TinderCardProps) => {
+export const PetCard = ({ profile, onSwipe, isActive }: PetCardProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-30, 30]);
@@ -66,7 +66,7 @@ export const TinderCard = ({ profile, onSwipe, isActive }: TinderCardProps) => {
       onDragEnd={handleDragEnd}
       className="absolute h-[600px] w-[700px] cursor-grab active:cursor-grabbing"
     >
-      <CardContent profile={profile} onLike={swipeRight} onDislike={swipeLeft} />
+      <PetCardContext profile={profile} onLike={swipeRight} onDislike={swipeLeft} />
     </motion.div>
   );
 };

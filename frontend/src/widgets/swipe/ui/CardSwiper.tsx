@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CardContent, TinderCard } from "@/features/swipe";
+import { PetCard } from "@/features/swipe";
 
 
 const cardData = [
@@ -61,7 +61,7 @@ export const CardSwiper = () => {
   return (
     <div className="relative mx-auto h-[600px] w-[700px] mb-20">
       {cards.map((card, index) => (
-        <TinderCard
+        <PetCard
           key={card.id}
           profile={card}
           onSwipe={(dir) => handleSwipe(dir, card)}

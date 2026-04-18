@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { AuthSwitch } from '@/features/auth/index';
 import { LoginForm } from '@/widgets/login/index'
 import { RegisterForm } from '@/widgets/register/index'

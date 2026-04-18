@@ -1,2 +1,1 @@
-export { CardContent } from './ui/CardContent'
-export { TinderCard } from './ui/TinderCard'
+export { PetCard } from './ui/PetCard'
