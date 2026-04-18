@@ -13,11 +13,11 @@ type HTTPConfig struct {
 }
 
 type Config struct {
-	LogLevel          string        `yaml:"log_level" env:"LOG_LEVEL" env-default:"DEBUG"`
-	SearchConcurrency int           `yaml:"search_concurrency" env:"SEARCH_CONCURRENCY" env-default:"1"`
-	SearchRate        int           `yaml:"search_rate" env:"SEARCH_RATE" env-default:"1"`
-	HTTPConfig        HTTPConfig    `yaml:"api_server"`
-	TokenTTL          time.Duration `yaml:"token_ttl" env:"TOKEN_TTL" env-default:"24h"`
+	LogLevel       string        `yaml:"log_level" env:"LOG_LEVEL" env-default:"DEBUG"`
+	HTTPConfig     HTTPConfig    `yaml:"api_server"`
+	TokenTTL       time.Duration `yaml:"token_ttl" env:"TOKEN_TTL" env-default:"24h"`
+	JWTSecret      string        `yaml:"jwt_secret" env:"JWT_SECRET" env-default:"super_secret_key"`
+	DatabaseURL    string        `yaml:"database_url" env:"DATABASE_URL" env-default:"postgres://user:password@100.121.171.79:5432/hackathon?sslmode=disable"`
 }
 
 func MustLoad(configPath string) Config {
