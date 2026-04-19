@@ -1,0 +1,34 @@
+{
+  "configurations": [
+    {
+      "name": "x64-Debug",
+      "generator": "Visual Studio 17 2022",
+      "configurationType": "Debug",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "-A x64",
+      "variables": [
+        {
+          "name": "OPENSSL_ROOT_DIR",
+          "value": "C:/Program Files/OpenSSL-Win64",
+          "type": "PATH"
+        }
+      ]
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Visual Studio 17 2022",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "-A x64",
+      "variables": [
+        {
+          "name": "OPENSSL_ROOT_DIR",
+          "value": "C:/Program Files/OpenSSL-Win64",
+          "type": "PATH"
+        }
+      ]
+    }
+  ]
+}
