@@ -5,7 +5,6 @@
 
 #include "postgres.h"
 
-// src/db/postgres.cpp
 #include <mutex>
 
 std::shared_ptr<pqxx::connection> Database::connection_;
@@ -69,14 +68,45 @@ int Database::createPet(const Pet& pet) {
         return newPet[0][0].as<int>();
     }
 }
-void Database::likePet(int user_id, int pet_id) {
+bool Database::likePet(int user_id, int pet_id) {
     pqxx::work txn(*connection_);
     txn.exec_params(
-        R"(INSERT INTO swipes (user_id, pet_id, is_like) VALUES ($1, $2, TRUE) ON CONFLICT (user_id, pet_id) DO UPDATE SET is_like = TRUE)",
-        user_id,
-        pet_id
+        R"(INSERT INTO swipes (user_id, pet_id, is_like) VALUES ($1, $2, TRUE) 
+           ON CONFLICT (user_id, pet_id) DO UPDATE SET is_like = TRUE)",
+        user_id, pet_id
     );
+
+    pqxx::result owner_res = txn.exec_params(
+        "SELECT owner_id FROM pets WHERE id = $1", pet_id
+    );
+    if (owner_res.empty()) {
+        txn.commit();
+        return false;
+    }
+    int owner_id = owner_res[0][0].as<int>();
+
+    pqxx::result mutual = txn.exec_params(
+        R"(SELECT 1 FROM swipes s 
+           JOIN pets p ON s.pet_id = p.id 
+           WHERE s.user_id = $1 
+             AND p.owner_id = $2 
+             AND s.is_like = TRUE 
+           LIMIT 1)",
+        owner_id, user_id
+    );
+    
+    bool matched = false;
+    if (!mutual.empty()) {
+        txn.exec_params(
+            R"(INSERT INTO matches (user_id, pet_id) VALUES ($1, $2) 
+               ON CONFLICT (user_id, pet_id) DO NOTHING)",
+            user_id, pet_id
+        );
+        matched = true;
+    }
+    
     txn.commit();
+    return matched;
 }
 
 void Database::dislikePet(int user_id, int pet_id) {
@@ -146,4 +176,21 @@ Pet Database::getPetById(int id) {
         row[5].is_null() ? "" : row[5].as<std::string>(),
         age
     };
+}
+
+std::vector<Match> Database::getMatches(int user_id) {
+    pqxx::work txn(*connection_);
+    pqxx::result res = txn.exec_params(
+        "SELECT id, pet_id, matched_at FROM matches WHERE user_id = $1 ORDER BY matched_at DESC",
+        user_id
+    );
+    std::vector<Match> matches;
+    for (auto row : res) {
+        matches.push_back({
+            row[0].as<int>(),
+            row[1].as<int>(),
+            row[2].as<std::string>()
+        });
+    }
+    return matches;
 }

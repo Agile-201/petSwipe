@@ -15,13 +15,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     pkg-config \
     libc-ares-dev \
-    # Additional Drogon optional dependencies (prevents missing header errors)
     libmariadb-dev \
     libsqlite3-dev \
     libbrotli-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Drogon (v1.9.10 - OpenSSL 3.0 compatible)
 RUN git clone https://github.com/an-tao/drogon.git /tmp/drogon && \
     cd /tmp/drogon && \
     git checkout v1.9.10 && \
@@ -36,7 +34,6 @@ RUN git clone https://github.com/an-tao/drogon.git /tmp/drogon && \
     ldconfig && \
     rm -rf /tmp/drogon
 
-# Install jwt-cpp header-only library
 RUN git clone --depth 1 https://github.com/Thalhammer/jwt-cpp.git /tmp/jwt-cpp && \
     cd /tmp/jwt-cpp && \
     mkdir build && cd build && \

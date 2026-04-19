@@ -12,8 +12,9 @@ public:
 
     static int createPet(const Pet& pet);
 
-    static void likePet(int user_id, int pet_id);
+    static bool likePet(int user_id, int pet_id);
     static void dislikePet(int user_id, int pet_id);
+    static std::vector<Match> getMatches(int user_id);
 
 private:
     static std::shared_ptr<pqxx::connection> connection_;

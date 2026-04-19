@@ -30,11 +30,12 @@ void SwipeController::like(const HttpRequestPtr& req,
         }
 
         int pet_id = (*json)["pet_id"].asInt();
-        Database::likePet(claims.user_id, pet_id);
+        bool matched = Database::likePet(claims.user_id, pet_id);
 
         Json::Value result;
         result["status"] = "success";
-        result["message"] = "Pet liked";
+        result["message"] = matched ? "It's a match!" : "Pet liked";
+        result["matched"] = matched;
 
         response->setStatusCode(k200OK);
         response->setContentTypeCode(CT_APPLICATION_JSON);

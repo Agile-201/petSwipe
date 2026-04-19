@@ -166,5 +166,42 @@ void PetController::getFeed(const HttpRequestPtr& req,
 	callback(response);
 }
 
+void PetController::getMatches(const HttpRequestPtr& req,
+    std::function<void(const HttpResponsePtr&)>&& callback)
+{
+    auto response = HttpResponse::newHttpResponse();
+    try {
+        auto auth_header = req->getHeader("Authorization");
+        if (auth_header.empty()) {
+            response->setStatusCode(k401Unauthorized);
+            response->setBody(R"({"error":"Authorization header missing"})");
+            callback(response);
+            return;
+        }
 
+        auto token = auth_header.substr(7);
+        JWTValidator validator(std::getenv("JWT_SECRET"));
+        auto claims = validator.validate(token);
+
+        auto matches = Database::getMatches(claims.user_id);
+
+        Json::Value rootJson(Json::arrayValue);
+        for (const auto& match : matches) {
+            Json::Value item;
+            item["id"] = match.id;
+            item["pet_id"] = match.pet_id;
+            item["matched_at"] = match.matched_at;
+            rootJson.append(item);
+        }
+
+        response->setStatusCode(k200OK);
+        response->setContentTypeCode(CT_APPLICATION_JSON);
+        response->setBody(rootJson.toStyledString());
+    }
+    catch (const std::exception& e) {
+        response->setStatusCode(k500InternalServerError);
+        response->setBody(R"({"error":")" + std::string(e.what()) + R"("})");
+    }
+    callback(response);
+}
 
