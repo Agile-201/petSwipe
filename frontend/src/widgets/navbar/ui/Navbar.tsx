@@ -15,7 +15,7 @@ export function Navbar(){
             <div className="ml-[150px]">
                 <Link href="/">
                     <svg width="83" height="70">
-                        <image href="logo.png" width="83" height="70"/>
+                        <image href="/logo.png" width="83" height="70"/>
                     </svg>
                 </Link>
             </div>
@@ -34,7 +34,7 @@ export function Navbar(){
                     className="mt-[5px]"
                 />
                 <Button 
-                    className="bg-[#387CCD] h-[44px] rounded-[20px] w-[242px] font-normal"
+                    className="bg-[#387CCD] h-[44px] rounded-[20px] w-[242px] font-normal hover:bg-[#0F1B65]"
                     onClick={() => router.push('/auth')}
                 >
                     Зарегистрироваться

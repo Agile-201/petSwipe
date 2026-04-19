@@ -55,7 +55,7 @@ export function OurWorkInfo() {
             <HomePagePetCard
                 name="Луша"
                 kindOfPet="Кошечка"
-                age={7}
+                age={4}
                 color="трёхцветная"
                 temper="Контактная, ласковая, игривая"
                 takingConditions="Сетки антикошки, отсутствие самовыгула, одной кошкой"

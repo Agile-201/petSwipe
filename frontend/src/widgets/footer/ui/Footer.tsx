@@ -9,7 +9,7 @@ export function Footer(){
             <div className="ml-[150px]">
                 <Link href="/">
                     <svg width="191" height="161">
-                        <image href="logo.png" width="191" height="161"/>
+                        <image href="/logo.png" width="191" height="161"/>
                     </svg>
                 </Link>
             </div>

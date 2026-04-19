@@ -20,7 +20,7 @@ export const RegisterForm = () => {
             />
 
             <Input
-                type="text"
+                type="password"
                 placeholder="Пароль"
                 className="mt-5 mb-5 rounded-[30px] h-[44px] w-[454px] p-[20px]
                 text-black text-[16px] bg-white w-[552px] border-none
@@ -44,8 +44,10 @@ export const RegisterForm = () => {
                 [&:focus]:border-none [&:focus]:shadow-none
                 placeholder:text-black mb-14"
             />
+
+            
         
-            <Button className="bg-[#387CCD] h-[50px] w-[552px] text-white font-light text-[18px] rounded-[30px]">
+            <Button className="bg-[#387CCD] h-[50px] w-[552px] text-white font-light text-[18px] rounded-[30px] hover:bg-[#0F1B65]">
                 Зарегистрироваться
             </Button>
         </div>

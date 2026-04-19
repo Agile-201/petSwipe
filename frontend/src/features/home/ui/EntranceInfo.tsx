@@ -16,7 +16,7 @@ export function EntranceInfo() {
             <p className="text-[24px] text-[#0F1B65] font-light mt-[-10px] text-center">питомцу найти друг друга без преград!</p>
 
             <Button
-                className="bg-[#387CCD] h-[44px] rounded-[30px] w-[220px] font-normal mb-2 self-center mt-3"
+                className="bg-[#387CCD] h-[44px] rounded-[30px] w-[220px] font-normal mb-2 self-center mt-3 hover:bg-[#0F1B65]"
                 onClick={() => router.push('/about')}
                 >
                 Узнать больше

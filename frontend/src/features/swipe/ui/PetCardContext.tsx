@@ -3,6 +3,8 @@
 import { X, Heart } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import PetProfile from "@/entities/swipe/PetProfile"
+import Link from "next/link";
+import { useRouter } from 'next/navigation';
 
 
 interface PetCardContextProps {
@@ -13,6 +15,8 @@ interface PetCardContextProps {
 
 
 export const PetCardContext = ({ profile, onLike, onDislike }: PetCardContextProps) => {
+  const router = useRouter();
+
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border bg-white shadow-lg transition-all duration-300 hover:shadow-xl dark:bg-gray-800 dark:border-gray-700">
       <div className="flex flex-1 flex-col md:flex-row">
@@ -28,18 +32,18 @@ export const PetCardContext = ({ profile, onLike, onDislike }: PetCardContextPro
 
             <button
               onClick={onDislike}
-              className="rounded-full bg-white p-3 text-black backdrop-blur-sm transition-all hover:bg-[#387CCD] hover:scale-110"
+              className="rounded-full bg-white p-3 text-black backdrop-blur-sm transition-all hover:bg-red-300 hover:scale-110"
               aria-label="Dislike"
             >
-              <X size={36} />
+              <X size={36} className="text-red-300 hover:text-white"/>
             </button>
 
             <button
               onClick={onLike}
-              className="rounded-full bg-white p-3 text-black backdrop-blur-sm transition-all hover:bg-[#A0CAF0] hover:scale-110"
+              className="rounded-full bg-white p-3 text-black backdrop-blur-sm transition-all hover:bg-green-300 hover:scale-110"
               aria-label="Like"
             >
-              <Heart size={36} />
+              <Heart size={36} className="text-green-300 hover:text-white"/>
             </button>
           </div>
         </div>
@@ -62,12 +66,17 @@ export const PetCardContext = ({ profile, onLike, onDislike }: PetCardContextPro
             <p className="text-[17px] text-[#0F1B65] font-light mt-1">
               {profile.bio}
             </p>
-            <p className="flex text-[20px] text-[#0F1B65] items-center font-light mt-4 underline">
-              Подробнее
-            </p>
+            <Link href="pet/18371236">
+              <p className="flex text-[20px] text-[#0F1B65] items-center font-light mt-4 underline">
+                Подробнее
+              </p>
+            </Link>
           </div>
 
-          <Button className="bg-[#387CCD] h-[44px] rounded-[20px] w-[242px] font-normal mb-2 self-center">
+          <Button
+            onClick={() => router.push('/chats')}
+            className="bg-[#387CCD] h-[44px] rounded-[20px] w-[242px] font-normal mb-2 self-center hover:bg-[#0F1B65]"
+          >
             Связаться с владельцем
           </Button>
         </div>

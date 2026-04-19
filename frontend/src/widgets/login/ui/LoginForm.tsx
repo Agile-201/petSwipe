@@ -32,7 +32,7 @@ export const LoginForm = () => {
                 placeholder:text-black mb-30"
             />
         
-            <Button className="bg-[#387CCD] h-[50px] w-[552px] text-white font-light text-[18px] rounded-[30px]">
+            <Button className="bg-[#387CCD] h-[50px] w-[552px] text-white font-light text-[18px] rounded-[30px] hover:bg-[#0F1B65]">
                 Войти
             </Button>
         </div>
