@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -28,10 +29,10 @@ func (r *ChatRepository) GetMessages(ctx context.Context, senderID, receiverID i
 	defer r.mu.RUnlock()
 
 	if limit == 0 {
-		limit = 50 
+		limit = 50
 	}
 	if limit > 100 {
-		limit = 100 
+		limit = 100
 	}
 
 	key1 := fmt.Sprintf("%d_%d", senderID, receiverID)
@@ -40,6 +41,10 @@ func (r *ChatRepository) GetMessages(ctx context.Context, senderID, receiverID i
 	var messages []*core.ChatMessage
 	messages = append(messages, r.messages[key1]...)
 	messages = append(messages, r.messages[key2]...)
+
+	sort.Slice(messages, func(i, j int) bool {
+		return messages[i].SentAt.Before(messages[j].SentAt)
+	})
 
 	if len(messages) > limit {
 		messages = messages[len(messages)-limit:]
@@ -66,5 +71,3 @@ func (r *ChatRepository) SendMessage(ctx context.Context, senderID, receiverID i
 
 	return msg, nil
 }
-
-

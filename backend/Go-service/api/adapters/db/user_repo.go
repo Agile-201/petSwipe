@@ -123,20 +123,26 @@ func (r *UserRepository) Create(ctx context.Context, email, passwordHash, role s
 	return &user, nil
 }
 
-func (r *UserRepository) Update(ctx context.Context,id int64,nickname, bio, avatarURL *string) (*core.User, error){
+func (r *UserRepository) Update(ctx context.Context, id int64, nickname, bio, avatarURL *string) (*core.User, error) {
 	query := `UPDATE users SET nickname = $1, bio = $2, avatar_url = $3, updated_at = NOW() 
 	          WHERE id = $4 
 	          RETURNING id, email, password_hash, role, nickname, bio, avatar_url, created_at, updated_at`
 
 	var user core.User
+	var (
+		dbNickname  sql.NullString
+		dbBio       sql.NullString
+		dbAvatarURL sql.NullString
+	)
+
 	err := r.db.QueryRowContext(ctx, query, nickname, bio, avatarURL, id).Scan(
 		&user.ID,
 		&user.Email,
 		&user.PasswordHash,
 		&user.Role,
-		&user.Nickname,
-		&user.Bio,
-		&user.AvatarURL,
+		&dbNickname,
+		&dbBio,
+		&dbAvatarURL,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -146,6 +152,16 @@ func (r *UserRepository) Update(ctx context.Context,id int64,nickname, bio, avat
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if dbNickname.Valid {
+		user.Nickname = &dbNickname.String
+	}
+	if dbBio.Valid {
+		user.Bio = &dbBio.String
+	}
+	if dbAvatarURL.Valid {
+		user.AvatarURL = &dbAvatarURL.String
 	}
 
 	return &user, nil

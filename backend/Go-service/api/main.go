@@ -35,17 +35,18 @@ func main() {
 	dbConn, err := initDatabase(log, cfg.DatabaseURL)
 	if err != nil {
 		log.Error("failed to initialize database", "error", err)
-		return
+		os.Exit(1)
 	}
 	defer dbConn.Close()
 
-	authenticator, err := aaa.New(cfg.JWTSecret, cfg.TokenTTL, log, dbConn)
-	if err != nil {
-		log.Error("failed to create authenticator", "error", err)
-		return
-	}
 	userRepo := db.NewUserRepository(dbConn)
 	chatRepo := db.NewChatRepository(dbConn)
+
+	authenticator, err := aaa.New(cfg.JWTSecret, cfg.TokenTTL, log, userRepo)
+	if err != nil {
+		log.Error("failed to create authenticator", "error", err)
+		os.Exit(1)
+	}
 
 	authMiddleware := middleware.Auth(authenticator)
 	profileHandler := authMiddleware(rest.NewProfileHandler(log, userRepo))
@@ -83,7 +84,9 @@ func main() {
 	go func() {
 		<-ctx.Done()
 		log.Debug("shutting down server")
-		if err := server.Shutdown(context.Background()); err != nil {
+		ctxShutdown, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctxShutdown); err != nil {
 			log.Error("erroneous shutdown", "error", err)
 		}
 	}()
@@ -92,7 +95,7 @@ func main() {
 	if err := server.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
 			log.Error("server closed unexpectedly", "error", err)
-			return
+			os.Exit(1)
 		}
 	}
 }

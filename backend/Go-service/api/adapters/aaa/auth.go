@@ -2,7 +2,6 @@ package aaa
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -24,26 +23,26 @@ type AAA struct {
 	secretKey []byte
 	tokenTTL  time.Duration
 	log       *slog.Logger
-	db        *sql.DB
+	userRepo  core.UserRepository
 }
 
-func New(secretKey string, tokenTTL time.Duration, log *slog.Logger, db *sql.DB) (AAA, error) {
+func New(secretKey string, tokenTTL time.Duration, log *slog.Logger, userRepo core.UserRepository) (AAA, error) {
 	if secretKey == "" {
 		return AAA{}, errors.New("secret key cannot be empty")
 	}
-	if db == nil {
-		return AAA{}, errors.New("database connection cannot be nil")
+	if userRepo == nil {
+		return AAA{}, errors.New("user repository cannot be nil")
 	}
 	return AAA{
 		secretKey: []byte(secretKey),
 		tokenTTL:  tokenTTL,
 		log:       log,
-		db:        db,
+		userRepo:  userRepo,
 	}, nil
 }
 
 func (a AAA) Login(ctx context.Context, email, password string) (string, error) {
-	user, err := a.GetUserByEmail(ctx, email)
+	user, err := a.userRepo.GetByEmail(ctx, email)
 	if err != nil {
 		a.log.WarnContext(ctx, "user not found", "email", email)
 		return "", fmt.Errorf("invalid credentials")
@@ -97,59 +96,16 @@ func (a AAA) Verify(tokenString string) (int64, error) {
 }
 
 func (a AAA) GetUserByEmail(ctx context.Context, email string) (*core.User, error) {
-	var user core.User
-
-	query := `SELECT id, email, password_hash, role, created_at, updated_at FROM users WHERE email = $1`
-	err := a.db.QueryRowContext(ctx, query, email).Scan(
-		&user.ID,
-		&user.Email,
-		&user.PasswordHash,
-		&user.Role,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
-	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("user not found")
-	}
-	if err != nil {
-		a.log.ErrorContext(ctx, "database error", "error", err)
-		return nil, err
-	}
-
-	return &user, nil
+	return a.userRepo.GetByEmail(ctx, email)
 }
 
 func (a AAA) CreateUser(ctx context.Context, email, passwordHash, role string) (*core.User, error) {
-	var user core.User
-	tx, err := a.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-
-	query := `INSERT INTO users (email, password_hash, role, created_at, updated_at)
-			VALUES ($1, $2, $3, NOW(), NOW())
-			RETURNING id, email, password_hash, role, created_at, updated_at`
-
-	err = tx.QueryRowContext(ctx, query, email, passwordHash, role).Scan(
-		&user.ID,
-		&user.Email,
-		&user.PasswordHash,
-		&user.Role,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
+	user, err := a.userRepo.Create(ctx, email, passwordHash, role)
 	if err != nil {
 		a.log.ErrorContext(ctx, "failed to create user", "error", err)
 		return nil, err
 	}
 
-	if err = tx.Commit(); err != nil {
-		return nil, err
-	}
-
 	a.log.InfoContext(ctx, "user created successfully", "user_id", user.ID)
-	return &user, nil
+	return user, nil
 }

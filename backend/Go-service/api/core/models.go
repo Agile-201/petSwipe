@@ -11,15 +11,15 @@ const (
 )
 
 type User struct {
-	ID        int64
-	Email     string
+	ID           int64
+	Email        string
 	PasswordHash string
-	Role      string
-    Nickname  *string 
-    Bio       *string 
-    AvatarURL *string 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Role         string
+	Nickname     *string
+	Bio          *string
+	AvatarURL    *string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type ChatMessage struct {
@@ -30,5 +30,3 @@ type ChatMessage struct {
 	IsRead     bool
 	SentAt     time.Time
 }
-
-
