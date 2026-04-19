@@ -1,5 +1,6 @@
 ﻿#pragma once 
 #include <drogon/HttpController.h>
+#include <optional>
 
 using namespace drogon;
 
@@ -9,6 +10,8 @@ struct Pet {
 	std::string name;
 	std::string breed;
 	std::string photo_url;
+	std::string description;
+    std::optional<int> age;
 };
 
 class PetController : public HttpController<PetController> {
