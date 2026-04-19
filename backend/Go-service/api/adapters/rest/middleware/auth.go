@@ -2,6 +2,9 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
+	"hackaton/api/core"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -14,18 +17,34 @@ type TokenVerifier interface {
 	Verify(token string) (int64, error)
 }
 
+type ErrorResponse struct {
+	Error string `json:"error"`
+	Code  string `json:"code,omitempty"`
+}
+
+func writeJSONError(w http.ResponseWriter, err *core.APIError) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(err.StatusCode)
+	if err := json.NewEncoder(w).Encode(ErrorResponse{
+		Error: err.Message,
+		Code:  err.Code,
+	}); err != nil {
+		log.Printf("failed to write json error response: %v", err)
+	}
+}
+
 func Auth(verifier TokenVerifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
 			if header == "" {
-				http.Error(w, "missing Authorization header", http.StatusUnauthorized)
+				writeJSONError(w, core.ErrMissingAuthorization)
 				return
 			}
 
 			prefix := "Bearer "
 			if !strings.HasPrefix(header, prefix) {
-				http.Error(w, "invalid Authorization header format", http.StatusUnauthorized)
+				writeJSONError(w, core.ErrInvalidAuthFormat)
 				return
 			}
 
@@ -33,7 +52,7 @@ func Auth(verifier TokenVerifier) func(http.Handler) http.Handler {
 
 			userID, err := verifier.Verify(token)
 			if err != nil {
-				http.Error(w, "invalid token", http.StatusUnauthorized)
+				writeJSONError(w, core.ErrInvalidToken)
 				return
 			}
 

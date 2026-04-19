@@ -29,17 +29,17 @@ fmt:
 	vcs goimports -w .
 
 up:
-	docker-compose up --build -d
+	docker compose up --build -d
 
 down:
-	docker-compose down
+	docker compose down
 
 logs:
-	docker-compose logs -f go_service
+	docker compose logs -f go_service
 
 clean:
 	rm -rf bin/
 	go clean
 
 docker-clean:
-	docker-compose down -v
+	docker compose down -v

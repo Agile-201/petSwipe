@@ -2,11 +2,12 @@ package rest
 
 import (
 	"encoding/json"
-	"fmt"
 	"hackaton/api/adapters/rest/middleware"
 	"hackaton/api/core"
+	"log"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/VictoriaMetrics/metrics"
 	"golang.org/x/crypto/bcrypt"
@@ -40,21 +41,49 @@ type RegisterResponse struct {
 }
 
 type ProfileResponse struct {
-	ID        int64  `json:"id"`
-	Email     string `json:"email"`
-	Role      string `json:"role"`
+	ID        int64   `json:"id"`
+	Email     string  `json:"email"`
+	Role      string  `json:"role"`
 	Nickname  *string `json:"nickname,omitempty"`
 	Bio       *string `json:"bio,omitempty"`
 	AvatarURL *string `json:"avatar_url,omitempty"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	CreatedAt string  `json:"created_at"`
+	UpdatedAt string  `json:"updated_at"`
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+	Code  string `json:"code,omitempty"`
+}
+
+func writeAPIError(w http.ResponseWriter, err *core.APIError) {
+	if err == nil {
+		err = core.ErrInternalError
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(err.StatusCode)
+	resp := ErrorResponse{
+		Error: err.Message,
+		Code:  err.Code,
+	}
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("failed to write json error response: %v", err)
+	}
+}
+
+func fieldError(field, reason string) *core.APIError {
+	return &core.APIError{
+		Message:    field + ": " + reason,
+		Code:       "INVALID_FIELD",
+		StatusCode: http.StatusBadRequest,
+	}
 }
 
 func NewHealthcheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	}
 }
 
@@ -83,32 +112,32 @@ func NewPingHandler(log *slog.Logger, pingers map[string]interface{}) http.Handl
 func NewLoginHandler(log *slog.Logger, auth core.Authenticator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			writeAPIError(w, core.ErrMethodNotAllowed)
 			return
 		}
 
 		var req LoginRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "invalid request body", http.StatusBadRequest)
+			writeAPIError(w, core.ErrInvalidRequest)
 			return
 		}
 
 		if req.Email == "" || req.Password == "" {
-			http.Error(w, "email and password required", http.StatusBadRequest)
+			writeAPIError(w, core.ErrMissingFields)
 			return
 		}
 
 		token, err := auth.Login(r.Context(), req.Email, req.Password)
 		if err != nil {
 			log.WarnContext(r.Context(), "login failed", "email", req.Email, "error", err)
-			http.Error(w, "invalid credentials", http.StatusUnauthorized)
+			writeAPIError(w, core.ErrInvalidCredentials)
 			return
 		}
 
 		user, err := auth.GetUserByEmail(r.Context(), req.Email)
 		if err != nil {
 			log.ErrorContext(r.Context(), "failed to get user", "error", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			writeAPIError(w, core.ErrInternalError)
 			return
 		}
 
@@ -126,33 +155,35 @@ func NewLoginHandler(log *slog.Logger, auth core.Authenticator) http.HandlerFunc
 }
 
 func NewRegisterHandler(log *slog.Logger, auth core.Authenticator) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request){
-		if r.Method != http.MethodPost{
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			writeAPIError(w, core.ErrMethodNotAllowed)
 			return
 		}
 		var req RegisterRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
-			http.Error(w, "invalid request body", http.StatusBadRequest)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeAPIError(w, core.ErrInvalidRequest)
 			return
 		}
 		if req.Email == "" || req.Password == "" {
-			http.Error(w, "email and password required", http.StatusBadRequest)
+			writeAPIError(w, core.ErrMissingFields)
 			return
 		}
 
-		if req.Role != "user" && req.Role != "admin" { req.Role = "user" }
+		if req.Role != "user" && req.Role != "admin" {
+			req.Role = "user"
+		}
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 		if err != nil {
 			log.ErrorContext(r.Context(), "failed to hash password", "error", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			writeAPIError(w, core.ErrInternalError)
 			return
 		}
 
 		user, err := auth.CreateUser(r.Context(), req.Email, string(hashedPassword), req.Role)
 		if err != nil {
 			log.WarnContext(r.Context(), "registration failed", "email", req.Email, "error", err)
-			http.Error(w, fmt.Sprintf("registration failed: %v", err), http.StatusBadRequest)
+			writeAPIError(w, core.ErrRegistrationFailed)
 			return
 		}
 
@@ -173,20 +204,20 @@ func NewRegisterHandler(log *slog.Logger, auth core.Authenticator) http.HandlerF
 func NewProfileHandler(log *slog.Logger, userRepo core.UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			writeAPIError(w, core.ErrMethodNotAllowed)
 			return
 		}
 
 		userID, ok := middleware.UserIDFromContext(r.Context())
 		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeAPIError(w, core.ErrUnauthorized)
 			return
 		}
 
 		user, err := userRepo.GetByID(r.Context(), userID)
 		if err != nil {
 			log.ErrorContext(r.Context(), "failed to get user", "user_id", userID, "error", err)
-			http.Error(w, "user not found", http.StatusNotFound)
+			writeAPIError(w, core.ErrUserNotFound)
 			return
 		}
 
@@ -212,14 +243,14 @@ func NewProfileHandler(log *slog.Logger, userRepo core.UserRepository) http.Hand
 func NewChatHandler(log *slog.Logger, chatRepo core.ChatRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			writeAPIError(w, core.ErrMethodNotAllowed)
 			return
 		}
 
 		userID, ok := middleware.UserIDFromContext(r.Context())
 		if !ok {
 			log.WarnContext(r.Context(), "unauthorized chat access", "path", r.URL.Path)
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeAPIError(w, core.ErrUnauthorized)
 			return
 		}
 
@@ -228,20 +259,20 @@ func NewChatHandler(log *slog.Logger, chatRepo core.ChatRepository) http.Handler
 
 		if receiverIDStr == "" {
 			log.WarnContext(r.Context(), "missing receiver_id", "user_id", userID)
-			http.Error(w, "receiver_id is required", http.StatusBadRequest)
+			writeAPIError(w, core.ErrMissingField)
 			return
 		}
 
 		receiverID, err := parseint64(receiverIDStr)
 		if err != nil {
 			log.WarnContext(r.Context(), "invalid receiver_id", "receiver_id", receiverIDStr, "error", err)
-			http.Error(w, "invalid receiver_id", http.StatusBadRequest)
+			writeAPIError(w, core.ErrInvalidField)
 			return
 		}
 
 		if userID == receiverID {
 			log.WarnContext(r.Context(), "cannot chat with self", "user_id", userID)
-			http.Error(w, "cannot chat with yourself", http.StatusBadRequest)
+			writeAPIError(w, core.ErrInvalidOperation)
 			return
 		}
 
@@ -255,7 +286,7 @@ func NewChatHandler(log *slog.Logger, chatRepo core.ChatRepository) http.Handler
 		messages, err := chatRepo.GetMessages(r.Context(), userID, receiverID, limit)
 		if err != nil {
 			log.ErrorContext(r.Context(), "failed to get messages", "user_id", userID, "receiver_id", receiverID, "error", err)
-			http.Error(w, "failed to get messages", http.StatusInternalServerError)
+			writeAPIError(w, core.ErrInternalError)
 			return
 		}
 
@@ -278,14 +309,14 @@ func NewChatHandler(log *slog.Logger, chatRepo core.ChatRepository) http.Handler
 func NewSendMessageHandler(log *slog.Logger, chatRepo core.ChatRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			writeAPIError(w, core.ErrMethodNotAllowed)
 			return
 		}
 
 		userID, ok := middleware.UserIDFromContext(r.Context())
 		if !ok {
 			log.WarnContext(r.Context(), "unauthorized send message", "path", r.URL.Path)
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeAPIError(w, core.ErrUnauthorized)
 			return
 		}
 
@@ -296,38 +327,38 @@ func NewSendMessageHandler(log *slog.Logger, chatRepo core.ChatRepository) http.
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.WarnContext(r.Context(), "invalid request body", "error", err, "user_id", userID)
-			http.Error(w, "invalid request body", http.StatusBadRequest)
+			writeAPIError(w, core.ErrInvalidRequest)
 			return
 		}
 
 		if req.ReceiverID == 0 {
 			log.WarnContext(r.Context(), "missing receiver_id", "user_id", userID)
-			http.Error(w, "receiver_id is required", http.StatusBadRequest)
+			writeAPIError(w, core.ErrMissingField)
 			return
 		}
 
 		if req.Message == "" {
 			log.WarnContext(r.Context(), "empty message", "user_id", userID, "receiver_id", req.ReceiverID)
-			http.Error(w, "message cannot be empty", http.StatusBadRequest)
+			writeAPIError(w, core.ErrInvalidMessage)
 			return
 		}
 
 		if len(req.Message) > 10000 {
 			log.WarnContext(r.Context(), "message too long", "user_id", userID, "length", len(req.Message))
-			http.Error(w, "message too long (max 10000 chars)", http.StatusBadRequest)
+			writeAPIError(w, core.ErrMessageTooLong)
 			return
 		}
 
 		if userID == req.ReceiverID {
 			log.WarnContext(r.Context(), "cannot send message to self", "user_id", userID)
-			http.Error(w, "cannot send message to yourself", http.StatusBadRequest)
+			writeAPIError(w, core.ErrInvalidOperation)
 			return
 		}
 
 		message, err := chatRepo.SendMessage(r.Context(), userID, req.ReceiverID, req.Message)
 		if err != nil {
 			log.ErrorContext(r.Context(), "failed to send message", "user_id", userID, "receiver_id", req.ReceiverID, "error", err)
-			http.Error(w, "failed to send message", http.StatusInternalServerError)
+			writeAPIError(w, core.ErrInternalError)
 			return
 		}
 
@@ -345,14 +376,14 @@ func NewSendMessageHandler(log *slog.Logger, chatRepo core.ChatRepository) http.
 func NewUpdateProfileHandler(log *slog.Logger, userRepo core.UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			writeAPIError(w, core.ErrMethodNotAllowed)
 			return
 		}
 
 		userID, ok := middleware.UserIDFromContext(r.Context())
 		if !ok {
 			log.WarnContext(r.Context(), "unauthorized profile update", "path", r.URL.Path)
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeAPIError(w, core.ErrUnauthorized)
 			return
 		}
 
@@ -364,30 +395,30 @@ func NewUpdateProfileHandler(log *slog.Logger, userRepo core.UserRepository) htt
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.WarnContext(r.Context(), "invalid request body", "error", err, "user_id", userID)
-			http.Error(w, "invalid request body", http.StatusBadRequest)
+			writeAPIError(w, core.ErrInvalidRequest)
 			return
 		}
 
 		if len(req.Nickname) > 100 {
 			log.WarnContext(r.Context(), "nickname too long", "user_id", userID, "length", len(req.Nickname))
-			http.Error(w, "nickname too long (max 100)", http.StatusBadRequest)
+			writeAPIError(w, core.ErrNicknameTooLong)
 			return
 		}
 		if len(req.Bio) > 5000 {
 			log.WarnContext(r.Context(), "bio too long", "user_id", userID, "length", len(req.Bio))
-			http.Error(w, "bio too long (max 5000)", http.StatusBadRequest)
+			writeAPIError(w, core.ErrBioTooLong)
 			return
 		}
 		if len(req.AvatarURL) > 500 {
 			log.WarnContext(r.Context(), "avatar_url too long", "user_id", userID, "length", len(req.AvatarURL))
-			http.Error(w, "avatar_url too long (max 500)", http.StatusBadRequest)
+			writeAPIError(w, core.ErrAvatarURLTooLong)
 			return
 		}
 
 		user, err := userRepo.Update(r.Context(), userID, &req.Nickname, &req.Bio, &req.AvatarURL)
 		if err != nil {
 			log.ErrorContext(r.Context(), "failed to update profile", "user_id", userID, "error", err)
-			http.Error(w, "failed to update profile", http.StatusInternalServerError)
+			writeAPIError(w, core.ErrInternalError)
 			return
 		}
 
@@ -413,13 +444,9 @@ func NewUpdateProfileHandler(log *slog.Logger, userRepo core.UserRepository) htt
 }
 
 func parseint(s string) (int, error) {
-	var i int
-	_, err := fmt.Sscanf(s, "%d", &i)
-	return i, err
+	return strconv.Atoi(s)
 }
 
 func parseint64(s string) (int64, error) {
-	var i int64
-	_, err := fmt.Sscanf(s, "%d", &i)
-	return i, err
+	return strconv.ParseInt(s, 10, 64)
 }
