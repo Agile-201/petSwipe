@@ -89,7 +89,7 @@ export function ChatWindow() {
     setTimeout(() => {
       const autoReply: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Вам нужно выспаться",
+        text: "Позже с вами свяжусь",
         sender: "them",
         timestamp: new Date(),
       };

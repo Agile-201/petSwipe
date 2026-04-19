@@ -14,8 +14,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-[calc(100vh-72px)]">
-      <div className="bg-[#D8ECFF80] border-none w-[600px] h-[560px] overflow-hidden p-0 rounded-4xl flex flex-col shadow-md">
+    <div className="flex flex-col items-center justify-center w-full ">
+      <div className={`bg-[#D8ECFF80] border-none w-[600px] 
+      ${isLoginForm ? 'h-[560px]' : 'h-[730px]'}
+      overflow-hidden p-0 rounded-4xl flex flex-col shadow-md mb-20`}>
         
         <p className="text-[37px] text-[#0F1B65] font-bold mt-10 text-center">
           Вход на платформу

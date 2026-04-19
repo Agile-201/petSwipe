@@ -15,11 +15,11 @@ export default function PetProfile() {
         </p>
 
         <PetCard
-            name="Барсик"
+            name="Василий"
             category="Кот"
-            age={3}
-            breed="Британец"
-            description="Ласковый, спокойный, любит спать на коленях."
+            age={4}
+            breed="Мейн-кун"
+            description="добрый великан среди кошек с царственной внешностью и мягким, собачьим по преданности характером."
             features="Нет особых заболеваний, кастрирован."
             imageUrl="/img1.png"
         />

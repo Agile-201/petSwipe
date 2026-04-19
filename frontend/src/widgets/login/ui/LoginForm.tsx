@@ -2,8 +2,18 @@
 
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+
 
 export const LoginForm = () => {
+    const router = useRouter();
+
+    const onSubmit = async () => {
+        toast.success("Вы успешно вошли в аккаунт");
+        router.push('/pets');
+    };
+
     return(
         <div className="flex flex-col items-center">
             <Input
@@ -32,7 +42,9 @@ export const LoginForm = () => {
                 placeholder:text-black mb-30"
             />
         
-            <Button className="bg-[#387CCD] h-[50px] w-[552px] text-white font-light text-[18px] rounded-[30px] hover:bg-[#0F1B65]">
+            <Button 
+                onClick={onSubmit}
+                className="bg-[#387CCD] h-[50px] w-[552px] text-white font-light text-[18px] rounded-[30px] hover:bg-[#0F1B65]">
                 Войти
             </Button>
         </div>

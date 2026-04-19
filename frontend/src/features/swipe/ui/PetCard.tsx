@@ -5,6 +5,7 @@ import { motion, PanInfo, useMotionValue, useTransform, animate } from "framer-m
 import { useSwipeable } from "react-swipeable";
 import { PetCardContext } from './PetCardContext'
 import PetProfile from "@/entities/swipe/PetProfile"
+import { useRouter } from "next/navigation";
 
 
 interface PetCardProps {
@@ -15,6 +16,8 @@ interface PetCardProps {
 
 
 export const PetCard = ({ profile, onSwipe, isActive }: PetCardProps) => {
+  const router = useRouter();
+
   const [isAnimating, setIsAnimating] = useState(false);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-30, 30]);
@@ -36,6 +39,7 @@ export const PetCard = ({ profile, onSwipe, isActive }: PetCardProps) => {
       onSwipe("right");
       x.set(0);
     });
+    router.push('/chats');
   };
 
   const handleDragEnd = (event: MouseEvent, info: PanInfo) => {
