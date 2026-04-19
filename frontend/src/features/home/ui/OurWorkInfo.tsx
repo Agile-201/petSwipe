@@ -53,21 +53,23 @@ export function OurWorkInfo() {
             />
 
             <HomePagePetCard
-                name="Луша"
-                kindOfPet="Кошечка"
+                name="Аркадий"
+                kindOfPet="Кот"
                 age={4}
                 color="трёхцветная"
-                temper="Контактная, ласковая, игривая"
-                takingConditions="Сетки антикошки, отсутствие самовыгула, одной кошкой"
+                temper="Спокойный джентельмен"
+                takingConditions="Выгуливать не требуется"
+                imageUrl="https://preview.redd.it/why-does-my-cat-alwaysmeow-after-i-sneeze-v0-4w7ewux6ur8b1.jpg?width=640&crop=smart&auto=webp&s=4aa14741dcea14864ab9c066a12642d764d96a93"
             />
 
             <HomePagePetCard
-                name="Луша"
-                kindOfPet="Кошечка"
-                age={7}
-                color="трёхцветная"
-                temper="Контактная, ласковая, игривая"
-                takingConditions="Сетки антикошки, отсутствие самовыгула, одной кошкой"
+                name="Пётр"
+                kindOfPet="Собака"
+                age={3}
+                color="золотой"
+                temper="Азорной непоседливый"
+                takingConditions="Любите и кормите"
+                imageUrl="https://pets-start.by/upload/iblock/c5f/m3ttlkezjbrre3ibtwz7wue3mjh3vmk2.jpg"
             />
             </div>
         </div>

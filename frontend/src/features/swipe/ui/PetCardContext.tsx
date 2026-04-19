@@ -2,7 +2,7 @@
 
 import { X, Heart } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import PetProfile from "@/entities/swipe/PetProfile"
+import PetProfile from "@/entities/pets/PetProfile"
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 
@@ -65,6 +65,12 @@ export const PetCardContext = ({ profile, onLike, onDislike }: PetCardContextPro
             </h3>
             <p className="text-[17px] text-[#0F1B65] font-light mt-1">
               {profile.bio}
+            </p>
+            <h3 className="flex text-[20px] text-[#0F1B65] items-center font-bold mt-3">
+              Особенности питомца:
+            </h3>
+            <p className="text-[17px] text-[#0F1B65] font-light mt-1">
+              {profile.extraInfo}
             </p>
             <Link href="pet/18371236">
               <p className="flex text-[20px] text-[#0F1B65] items-center font-light mt-4 underline">

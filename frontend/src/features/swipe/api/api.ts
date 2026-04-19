@@ -70,25 +70,3 @@ export async function getPetById(petId: string) {
     return null
   }
 }
-
-export async function createPet(pet: Pet) {
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/pets/create`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: pet.id,
-        ouner_id: pet.ounerId,
-        name: pet.name,
-        breed: pet.breed,
-        description: pet.description,
-        age: pet.age,
-      }),
-    });
-    const data = await response.json();
-    return { ok: response.ok, data };
-  } catch (error) {
-    console.log(error);
-    return { ok: false, data: null, error: error };
-  }
-}

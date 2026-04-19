@@ -5,6 +5,7 @@ interface PetProfile {
   bio: string;
   image: string;
   breed: string;
+  extraInfo: string;
 }
 
 export default PetProfile

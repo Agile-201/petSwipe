@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, PanInfo, useMotionValue, useTransform, animate } from "framer-motion";
 import { useSwipeable } from "react-swipeable";
 import { PetCardContext } from './PetCardContext'
-import PetProfile from "@/entities/swipe/PetProfile"
+import PetProfile from "@/entities/pets/PetProfile"
 import { useRouter } from "next/navigation";
 
 
