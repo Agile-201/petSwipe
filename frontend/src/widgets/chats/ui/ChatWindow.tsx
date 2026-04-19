@@ -108,12 +108,15 @@ export function ChatWindow() {
   };
 
   return (
-    <div className="flex flex-row w-[1000px] justify-center gap-1">
-      <div className="bg-[#ebf5ff] h-[600px] w-[300px] rounded-l-[30px] shadow-[10px_-10px_15px_-3px_rgba(0,0,0,0.1),4px_-4px_6px_-4px_rgba(0,0,0,0.1),0_10px_15px_-3px_rgba(0,0,0,0.1)] pt-4 px-3 overflow-y-auto">
+    <div className="flex flex-row justify-center gap-1">
+      <div className="bg-[#ebf5ff] h-[600px] w-[300px] rounded-l-[30px] pt-4 px-3 overflow-y-auto
+      shadow-[10px_-10px_15px_-3px_rgba(0,0,0,0.1),4px_-4px_6px_-4px_rgba(0,0,0,0.1),0_10px_15px_-3px_rgba(0,0,0,0.1)]">
         <Input
           type="text"
           placeholder="Найти чат"
-          className="rounded-[20px] h-[44px] p-[20px] text-[#0F1B65] text-[16px] bg-white w-[280px] border-none outline-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 active:outline-none active:ring-0 hover:outline-none hover:ring-0 [&:focus]:border-none [&:focus]:shadow-none placeholder:text-[#0F1B65] mb-4"
+          className="rounded-[20px] h-[44px] p-[20px] text-[#0F1B65] text-[16px] bg-white w-[280px] border-none outline-none focus:outline-none focus:ring-0 focus:ring-offset-0
+          focus-visible:outline-none focus-visible:ring-0 active:outline-none active:ring-0 hover:outline-none hover:ring-0
+          [&:focus]:border-none [&:focus]:shadow-none placeholder:text-[#0F1B65] mb-4"
         />
 
         {contacts.map((contact) => (

@@ -9,8 +9,16 @@ export default function HomePage() {
   const router = useRouter();
 
   return (
-    <div className="flex items-center flex-col">
-        
+    <div
+      className="flex items-center flex-col min-h-screen"
+      style={{
+        backgroundImage: "url('/PAWS_final.png')",
+        backgroundRepeat: "repeat-y",
+        backgroundSize: "100% auto",
+        backgroundPosition: "top",
+      }}
+    >
+
         <EntranceInfo/>
 
         <img className="ml-8 mb-[-78px]" src='catMain.png'/>

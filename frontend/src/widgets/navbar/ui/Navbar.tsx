@@ -32,6 +32,7 @@ export function Navbar(){
                     fill='#387CCD'
                     strokeWidth={6}
                     className="mt-[5px]"
+                    onClick={() => router.push('/chats')}
                 />
                 <Button 
                     className="bg-[#387CCD] h-[44px] rounded-[20px] w-[242px] font-normal hover:bg-[#0F1B65]"

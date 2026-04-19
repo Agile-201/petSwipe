@@ -9,7 +9,12 @@ export default function HomePage() {
   const router = useRouter();
 
   return (
-    <div>
+    <div style={{
+        backgroundImage: "url('/PAWS_final.png')",
+        backgroundRepeat: "repeat-y",
+        backgroundSize: "100% auto",
+        backgroundPosition: "top",
+      }}>
         <div className="flex justify-center items-center gap-70 mb-5">
           <p className="text-center text-[#0F1B65] text-[40px] font-bold">Питомцы</p>
 

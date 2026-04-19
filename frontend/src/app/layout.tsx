@@ -20,7 +20,13 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en" className={cn("font-sans", geist.variable)}
+      lang="en" className={`
+        bg-[url('/PAWS_final.png')] 
+        bg-repeat-y
+        bg-[length:100%_auto]
+        min-h-screen
+        ${cn("font-sans", geist.variable)}
+      `}
     >
       <Navbar/>
       <body className="min-h-full flex flex-col">

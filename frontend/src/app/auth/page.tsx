@@ -14,7 +14,13 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full ">
+    <div className="flex flex-col items-center justify-center w-full"
+    style={{
+        backgroundImage: "url('/PAWS_final.png')",
+        backgroundRepeat: "repeat-y",
+        backgroundSize: "100% auto",
+        backgroundPosition: "top",
+      }}>
       <div className={`bg-[#D8ECFF80] border-none w-[600px] 
       ${isLoginForm ? 'h-[560px]' : 'h-[730px]'}
       overflow-hidden p-0 rounded-4xl flex flex-col shadow-md mb-20`}>
