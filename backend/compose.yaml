@@ -32,6 +32,7 @@ services:
     container_name: go_service
     restart: unless-stopped
     environment:
+      # Исправленный URL для подключения к контейнеру postgres
       DATABASE_URL: postgres://postgres:%7DroR%23D%7B%2Fh2rsRVH@100.121.171.79:5432/postgres?sslmode=disable
       JWT_SECRET: super_secret_key
       API_ADDRESS: :8080
@@ -51,17 +52,46 @@ services:
       timeout: 5s
       start_period: 10s
 
+  # C++ Service (Pet management, Swipes)
+  cpp_service:
+    build:
+      context: ./C-service
+      dockerfile: Dockerfile
+    container_name: cpp_service
+    restart: unless-stopped
+    environment:
+      # Тот же секрет и БД, что и у Go
+      DATABASE_URL: postgres://postgres:%7DroR%23D%7B%2Fh2rsRVH@100.121.171.79:5432/postgres?sslmode=disable
+      JWT_SECRET: super_secret_key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8081"
+    networks:
+      - petswipe
+    # Опционально: healthcheck для C++ сервиса (если реализован эндпоинт /health)
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+    #   interval: 10s
+    #   retries: 3
+    #   timeout: 5s
+    #   start_period: 15s
+
   # Nginx Gateway
   nginx:
     image: nginx:alpine
     container_name: nginx_gateway
     restart: unless-stopped
     ports:
-      - "8081:80"
+      - "8000:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - go_service
+      go_service:
+        condition: service_healthy
+      cpp_service:
+        condition: service_started  # или service_healthy, если есть healthcheck
     networks:
       - petswipe
 

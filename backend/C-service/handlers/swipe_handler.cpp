@@ -1,5 +1,5 @@
 ﻿#include "swipe_handler.h"
-#include "postgre.h"
+#include "postgres.h"
 #include "validator.h"
 
 #include <json/json.h>
@@ -14,6 +14,7 @@ void SwipeController::like(const HttpRequestPtr& req,
             response->setStatusCode(k401Unauthorized);
             response->setBody(R"({"error":"Authorization header missing"})");
             callback(response);
+            return;
         }
 
         auto token = auth_header.substr(7);
@@ -25,6 +26,7 @@ void SwipeController::like(const HttpRequestPtr& req,
             response->setStatusCode(k400BadRequest);
             response->setBody(R"({"error":"Missing pet_id in request body"})");
             callback(response);
+            return;
         }
 
         int pet_id = (*json)["pet_id"].asInt();
@@ -56,6 +58,7 @@ void SwipeController::dislike(const HttpRequestPtr& req,
             response->setStatusCode(k401Unauthorized);
             response->setBody(R"({"error":"Authorization header missing"})");
             callback(response);
+            return;
         }
 
         auto token = auth_header.substr(7);
@@ -67,6 +70,7 @@ void SwipeController::dislike(const HttpRequestPtr& req,
             response->setStatusCode(k400BadRequest);
             response->setBody(R"({"error":"Missing pet_id in request body"})");
             callback(response);
+            return;
         }
 
         int pet_id = (*json)["pet_id"].asInt();
