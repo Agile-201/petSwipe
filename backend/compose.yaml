@@ -32,7 +32,6 @@ services:
     container_name: go_service
     restart: unless-stopped
     environment:
-      # Исправленный URL для подключения к контейнеру postgres
       DATABASE_URL: postgres://postgres:%7DroR%23D%7B%2Fh2rsRVH@100.121.171.79:5432/postgres?sslmode=disable
       JWT_SECRET: super_secret_key
       API_ADDRESS: :8080
@@ -70,15 +69,7 @@ services:
       - "8081"
     networks:
       - petswipe
-    # Опционально: healthcheck для C++ сервиса (если реализован эндпоинт /health)
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
-    #   interval: 10s
-    #   retries: 3
-    #   timeout: 5s
-    #   start_period: 15s
 
-  # Nginx Gateway
   nginx:
     image: nginx:alpine
     container_name: nginx_gateway
@@ -91,11 +82,10 @@ services:
       go_service:
         condition: service_healthy
       cpp_service:
-        condition: service_started  # или service_healthy, если есть healthcheck
+        condition: service_started 
     networks:
       - petswipe
 
-  # PgAdmin for database management
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
