@@ -5,7 +5,6 @@
 
 #include "postgres.h"
 
-// src/db/postgres.cpp
 #include <mutex>
 
 std::shared_ptr<pqxx::connection> Database::connection_;
