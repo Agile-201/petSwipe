@@ -32,8 +32,8 @@ std::vector<Pet> Database::getAllPets() {
             row[1].as<int>(),
             row[2].as<std::string>(),
             row[3].as<std::string>(),
-            row[4].as<std::string>(),
-            row[5].as<std::string>(),
+            row[4].is_null() ? "" : row[4].as<std::string>(),
+            row[5].is_null() ? "" : row[5].as<std::string>(),
             age
         });
     }
@@ -106,14 +106,18 @@ std::vector<Pet> Database::getFeed(int user_id, int limit) {
     );
     std::vector<Pet> pets;
     for (auto row : result) {
+        std::optional<int> age;
+        if (!row[6].is_null()) {
+            age = row[6].as<int>();
+        }
         pets.push_back({
             row[0].as<int>(),
             row[1].as<int>(),
             row[2].as<std::string>(),
             row[3].as<std::string>(),
-            row[4].as<std::string>(),
-            row[5].as<std::string>(),   
-            row[6].as<int>() 
+            row[4].is_null() ? "" : row[4].as<std::string>(),
+            row[5].is_null() ? "" : row[5].as<std::string>(),
+            age
         });
     }
     return pets;
@@ -129,13 +133,17 @@ Pet Database::getPetById(int id) {
         throw std::runtime_error("Pet not found");
     }
     auto row = result[0];
+    std::optional<int> age;
+    if (!row[6].is_null()) {
+        age = row[6].as<int>();
+    }
     return {
         row[0].as<int>(),
         row[1].as<int>(),
         row[2].as<std::string>(),
         row[3].as<std::string>(),
-        row[4].as<std::string>(),
-        row[5].as<std::string>(),   
-        row[6].as<int>() 
+        row[4].is_null() ? "" : row[4].as<std::string>(),
+        row[5].is_null() ? "" : row[5].as<std::string>(),
+        age
     };
 }
