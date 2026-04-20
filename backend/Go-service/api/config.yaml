@@ -1,0 +1,7 @@
+log_level: DEBUG
+token_ttl: 24h
+jwt_secret: super_secret_key
+database_url: postgres://postgres:%7DroR%23D%7B%2Fh2rsRVH@100.121.171.79:5432/postgres?sslmode=disable
+api_server:
+  address: :8080 
+  timeout: 15s

@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_hackathon
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hackathon
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./Go-service/api/migration:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    networks:
+      - petswipe
+
+  # Go Service (Auth, Chat, User management)
+  go_service:
+    build:
+      context: ./Go-service
+      dockerfile: Dockerfile.api
+    container_name: go_service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://postgres:%7DroR%23D%7B%2Fh2rsRVH@100.121.171.79:5432/postgres?sslmode=disable
+      JWT_SECRET: super_secret_key
+      API_ADDRESS: :8080
+      LOG_LEVEL: DEBUG
+      TOKEN_TTL: 24h
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - petswipe
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      retries: 3
+      timeout: 5s
+      start_period: 10s
+
+  # C++ Service (Pet management, Swipes)
+  cpp_service:
+    build:
+      context: ./C-service
+      dockerfile: Dockerfile
+    container_name: cpp_service
+    restart: unless-stopped
+    environment:
+      # Тот же секрет и БД, что и у Go
+      DATABASE_URL: postgres://postgres:%7DroR%23D%7B%2Fh2rsRVH@100.121.171.79:5432/postgres?sslmode=disable
+      JWT_SECRET: super_secret_key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8081"
+    networks:
+      - petswipe
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_gateway
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      go_service:
+        condition: service_healthy
+      cpp_service:
+        condition: service_started 
+    networks:
+      - petswipe
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_PROXY_X_FOR_COUNT: 1
+      PGADMIN_CONFIG_PROXY_X_PROTO_COUNT: 1
+    depends_on:
+      - postgres
+    networks:
+      - petswipe
+
+volumes:
+  postgres_data:
+
+networks:
+  petswipe:
+    driver: bridge

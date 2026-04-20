@@ -1,0 +1,11 @@
+﻿{
+  "dependencies": [
+    "openssl",
+    "zlib",
+    "drogon",
+    "libpq",
+    "libpqxx",
+    "jwt-cpp",
+    "picojson"
+  ]
+}
