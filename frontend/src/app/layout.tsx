@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/shared/lib/utils";
-import { Navbar } from "@/widgets/navbar/index"; 
+import { Navbar } from "@/widgets/navbar/index";
 import { Footer } from "@/widgets/footer/index";
 import { ReactToast } from "@/providers";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,21 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en" className={`
-        bg-[url('/PAWS_final.png')] 
-        bg-repeat-y
-        bg-[length:100%_auto]
-        min-h-screen
-        ${cn("font-sans", geist.variable)}
-      `}
-    >
-      <Navbar/>
-      <body className="min-h-full flex flex-col">
-        {children}
-        <ReactToast/>
+    <html lang="en" className={cn("font-sans", geist.variable, "h-full")}>
+      <body className="h-full flex flex-col overflow-x-hidden">
+        <Navbar />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <ReactToast />
       </body>
-      <Footer/>
     </html>
   );
 }

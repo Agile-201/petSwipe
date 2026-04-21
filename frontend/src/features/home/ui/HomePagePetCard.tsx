@@ -45,7 +45,7 @@ export function HomePagePetCard({
         </p>
 
         <Button
-          className="mt-auto bg-[#387CCD] h-[34px] rounded-[15px] w-[160px] font-normal mb-2 self-end mr-5 text-[13px]"
+          className="mt-auto bg-[#387CCD] h-[34px] rounded-[15px] w-[160px] font-normal mb-2 self-center mr-5 text-[13px]"
         >
           Теперь с семьёй
         </Button>

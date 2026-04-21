@@ -127,3 +127,14 @@
     @apply font-sans;
     }
 }
+
+/* @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+*/
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+} 
