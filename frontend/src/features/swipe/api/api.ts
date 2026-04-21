@@ -1,4 +1,4 @@
-import { BACKEND_URL, FRONTEND_URL } from "@/shared/config/api"
+import { BACKEND_URL } from "@/shared/config/api"
 
 interface Pet {
     id: number;
