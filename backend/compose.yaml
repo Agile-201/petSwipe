@@ -1,20 +1,22 @@
+version: "3.9"
+
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: postgres_hackathon
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./Go-service/api/migration:/docker-entrypoint-initdb.d
+      - ./Go-service/api/migration:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "user", "-d", "postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -29,9 +31,9 @@ services:
       dockerfile: Dockerfile.api
     container_name: go_service
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgres://user:password@postgres:5432/postgres?sslmode=disable
-      JWT_SECRET: super_secret_key
       API_ADDRESS: :8080
       LOG_LEVEL: DEBUG
       TOKEN_TTL: 24h
@@ -56,9 +58,8 @@ services:
       dockerfile: Dockerfile
     container_name: cpp_service
     restart: unless-stopped
-    environment:
-      DATABASE_URL: postgres://user:password@postgres:5432/postgres?sslmode=disable
-      JWT_SECRET: super_secret_key
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,6 +68,7 @@ services:
     networks:
       - petswipe
 
+  # Nginx Gateway
   nginx:
     image: nginx:alpine
     container_name: nginx_gateway
@@ -79,23 +81,22 @@ services:
       go_service:
         condition: service_healthy
       cpp_service:
-        condition: service_started 
+        condition: service_started
     networks:
       - petswipe
 
+  # PgAdmin (dev / demo only)
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_PROXY_X_FOR_COUNT: 1
-      PGADMIN_CONFIG_PROXY_X_PROTO_COUNT: 1
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - petswipe
 
