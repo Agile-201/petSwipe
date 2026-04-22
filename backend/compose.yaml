@@ -57,7 +57,6 @@ services:
     container_name: cpp_service
     restart: unless-stopped
     environment:
-      # Тот же секрет и БД, что и у Go
       DATABASE_URL: postgres://user:password@postgres:5432/postgres?sslmode=disable
       JWT_SECRET: super_secret_key
     depends_on:
