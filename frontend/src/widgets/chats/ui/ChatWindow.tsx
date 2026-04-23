@@ -179,7 +179,6 @@ export function ChatWindow() {
           </div>
         </div>
 
-        {/* Окно чата */}
         <div
           className={`
             flex-1 bg-[#ebf5ff] rounded-2xl md:rounded-r-[30px] md:rounded-l-none

@@ -57,14 +57,13 @@ export const CardSwiper = () => {
   const [cards, setCards] = useState(cardData);
 
   const handleSwipe = (direction: "left" | "right", card: (typeof cardData)[0]) => {
-    console.log(`Swipe ${direction} on ${card.name}`);
     setCards((prev) => prev.slice(1));
   };
 
   if (cards.length === 0) {
     return (
-      <div className="flex items-center justify-center">
-        <div className="flex h-[600px] w-[700px] items-center justify-center">
+      <div className="flex items-center justify-center px-4">
+        <div className="flex h-[80vh] w-full max-w-[700px] items-center justify-center">
           <p className="text-gray-500">Анкеты закончились!</p>
         </div>
       </div>
@@ -72,7 +71,7 @@ export const CardSwiper = () => {
   }
 
   return (
-    <div className="relative mx-auto h-[600px] w-[700px] mb-20">
+    <div className="relative mx-auto mb-20 h-[80vh] w-full max-w-[700px]">
       {cards.map((card, index) => (
         <PetCard
           key={card.id}
@@ -82,5 +81,5 @@ export const CardSwiper = () => {
         />
       ))}
     </div>
-  );
+);
 };

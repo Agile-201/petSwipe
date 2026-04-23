@@ -7,13 +7,11 @@ import { PetCardContext } from './PetCardContext'
 import PetProfile from "@/entities/pets/PetProfile"
 import { useRouter } from "next/navigation";
 
-
 interface PetCardProps {
   profile: PetProfile;
   onSwipe: (direction: "left" | "right") => void;
   isActive: boolean;
 }
-
 
 export const PetCard = ({ profile, onSwipe, isActive }: PetCardProps) => {
   const router = useRouter();
@@ -68,7 +66,7 @@ export const PetCard = ({ profile, onSwipe, isActive }: PetCardProps) => {
       dragElastic={0.7}
       style={{ x, rotate, opacity }}
       onDragEnd={handleDragEnd}
-      className="absolute h-[600px] w-[700px] cursor-grab active:cursor-grabbing"
+      className="absolute inset-0 h-full w-full cursor-grab active:cursor-grabbing"
     >
       <PetCardContext profile={profile} onLike={swipeRight} onDislike={swipeLeft} />
     </motion.div>
