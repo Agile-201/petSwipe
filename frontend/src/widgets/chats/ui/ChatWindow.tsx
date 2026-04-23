@@ -65,6 +65,12 @@ const contacts: Contact[] = [
     avatar: "/noProfile.png",
     lastMessage: "Спасибо!",
   },
+  {
+    id: "8",
+    name: "Олег",
+    avatar: "/noProfile.png",
+    lastMessage: "Спасибо!",
+  },
 ];
 
 export function ChatWindow() {
@@ -73,7 +79,7 @@ export function ChatWindow() {
   );
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [newMessage, setNewMessage] = useState("");
-  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+  const [mobileView, setMobileView] = useState<"list" | "chat">("chat");
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 

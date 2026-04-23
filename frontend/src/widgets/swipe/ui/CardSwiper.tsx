@@ -71,7 +71,7 @@ export const CardSwiper = () => {
   }
 
   return (
-    <div className="relative mx-auto mb-20 h-[80vh] w-full max-w-[700px]">
+    <div className="relative mx-auto mb-20 h-[85dvh] w-full max-w-[700px]">
       {cards.map((card, index) => (
         <PetCard
           key={card.id}

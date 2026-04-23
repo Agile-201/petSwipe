@@ -11,7 +11,7 @@ export function Navbar(){
 
     return(
         <header className="bg-white h-auto min-h-[94px] flex items-center py-2">
-            <div className="container mx-auto flex flex-wrap items-center justify-between px-4 md:px-6 lg:px-8">
+            <div className="container mx-auto flex flex-wrap items-center justify-between px-0 md:px-6 lg:px-8">
 
                 <div className="shrink-0">
                     <Link href="/">
@@ -24,7 +24,7 @@ export function Navbar(){
                     </Link>
                 </div>
 
-                <nav className="flex gap-4 sm:gap-6 md:gap-[70px] ml-4 md:ml-[40px]">
+                <nav className="flex gap-2 sm:gap-6 md:gap-[70px] ml-3 md:ml-[40px]">
                     <Link
                         href="/pets"
                         className="text-base sm:text-lg md:text-[22px] font-light hover:text-[#387CCD] transition"
@@ -39,7 +39,7 @@ export function Navbar(){
                     </Link>
                 </nav>
 
-                <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+                <div className="flex items-center gap-0 sm:gap-3 ml-auto">
                     <button
                         onClick={() => router.push('/chats')}
                         className="p-1 rounded-full hover:bg-gray-100 transition"

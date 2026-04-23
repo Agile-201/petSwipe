@@ -13,7 +13,7 @@ export default function HomePage() {
 
         <EntranceInfo/>
 
-        <img className="mb-[-78px]" src='catMain.png'/>
+        <img className="mb-[-30px] sm:mb-[-78px]" src='catMain.png'/>
 
         <StatsInfo/>
 

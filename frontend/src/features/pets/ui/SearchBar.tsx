@@ -9,7 +9,7 @@ export function SearchBar() {
     const router = useRouter();
 
     return(
-        <div className="flex justify-center items-center gap-4 mb-10 px-4">
+        <div className="flex justify-center items-center gap-2 mb-10 px-4">
             <Input
                 type="text"
                 placeholder="Поиск питомца"

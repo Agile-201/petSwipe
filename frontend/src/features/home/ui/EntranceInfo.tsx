@@ -9,7 +9,7 @@ export function EntranceInfo() {
     
     return (
         <div className="flex items-center flex-col">
-            <p className="text-center mx-10 text-[40px] sm:text-[50px] text-[#0F1B65] font-bold mt-10 sm:mt-20 ">Поможем вам найти хвостика!</p>
+            <p className="text-center mx-5 text-[40px] sm:text-[50px] text-[#0F1B65] font-bold mt-10 sm:mt-20 ">Поможем вам найти хвостика!</p>
 
             <p className="text-[24px] text-[#0F1B65] font-light mt-4 text-center max-w-120 sm:max-w-160 mb-3">PetSwipe - сервис, помогающий будущему хозяину и питомцу найти друг друга без преград!</p>
 
