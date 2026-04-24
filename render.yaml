@@ -1,12 +1,10 @@
 services:
-  # Go-сервис (аутентификация, чат, пользователи)
   - name: go-service
-    rootDir: backend/Go-service
     type: web
     runtime: image
     repo: https://github.com/Agile-201/petSwipe
+    context: backend/Go-service
     dockerfilePath: Dockerfile.api
-    dockerContext: .
     plan: free
     envVars:
       - key: API_ADDRESS
@@ -35,20 +33,17 @@ services:
         fromDatabase:
           name: pet-db
           property: database
-      # Добавьте другие переменные из вашего .env.example
       - key: JWT_SECRET
-        sync: false  # задаёте вручную через панель Render
+        sync: false
     healthCheckPath: /health
     numReplicas: 1
 
-  # C++-сервис (питомцы, свайпы)
   - name: cpp-service
-    rootDir: backend/C-service
     type: web
     runtime: image
     repo: https://github.com/Agile-201/petSwipe
+    context: backend/C-service
     dockerfilePath: Dockerfile
-    dockerContext: .
     plan: free
     envVars:
       - key: POSTGRES_HOST
@@ -73,17 +68,16 @@ services:
           property: database
       - key: JWT_SECRET
         sync: false
-    healthCheckPath: /health  # если ваш C++ сервис отдаёт /health
+    # временно убираем healthCheck, если у C++ сервиса нет /health
+    # healthCheckPath: /health
     numReplicas: 1
 
-  # Nginx – reverse proxy
   - name: nginx
-    rootDir: backend
     type: web
     runtime: image
     repo: https://github.com/Agile-201/petSwipe
-    dockerfilePath: nginx.Dockerfile   # создадим отдельный Dockerfile для nginx
-    dockerContext: .
+    context: backend
+    dockerfilePath: nginx.Dockerfile
     plan: free
     envVars: []
     healthCheckPath: /health
@@ -92,5 +86,5 @@ services:
 databases:
   - name: pet-db
     databaseName: petswipe
-    plan: free   # бесплатный managed PostgreSQL (512 MB)
-    ipAllowList: []  # разрешить доступ только из сервисов Render
+    plan: free
+    ipAllowList: []
